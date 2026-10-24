@@ -23,6 +23,12 @@ body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 .installbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 10px 14px;margin:0 0 16px;font-weight:600}
+/* pulsante con la spunta */
+.item.has-check{grid-template-columns:auto minmax(0,1fr) auto}
+.item.has-check .s,.item.has-check .acts{grid-column:2/-1}
+.tick{appearance:none;width:36px;height:36px;margin-top:-4px;border-radius:50%;border:2px solid color-mix(in srgb,var(--ok) 55%,var(--line));background:var(--surface);color:var(--ok);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
+.tick svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.tick:hover,.tick:focus-visible{background:color-mix(in srgb,var(--ok) 14%,var(--surface));border-color:var(--ok)}
 /* pannello "segna come fatta" */
 .check{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer}
 .check input{width:22px;height:22px;padding:0;margin:0;flex:none;accent-color:var(--c-man)}
@@ -771,11 +777,12 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     if(parseD(s.data))meta.push((isNum(s.km)?"stima ":"")+fmtD(s.data));
     if(isNum(s.ripeti)&&s.ripeti>0)meta.push(s.ripeti===12?"ogni anno":s.ripeti===24?"ogni 2 anni":"ogni "+s.ripeti+" mesi");
     else if(isNum(s.ripetiKm)&&s.ripetiKm>0)meta.push("ogni "+num(s.ripetiKm)+" km");
-    var h='<li class="item"><div class="main"><div class="t">'+esc(s.titolo||"Scadenza")+'</div>'+(meta.length?'<div class="meta">'+esc(meta.join(" · "))+'</div>':"")+'</div>'+
+    var tick=acts&&!S.ro;
+    var h='<li class="item'+(tick?" has-check":"")+'">'+(tick?'<button type="button" class="tick" data-fatto="'+esc(s.id)+'" aria-label="Segna come fatta: '+esc(s.titolo||"scadenza")+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>':"")+
+      '<div class="main"><div class="t">'+esc(s.titolo||"Scadenza")+'</div>'+(meta.length?'<div class="meta">'+esc(meta.join(" · "))+'</div>':"")+'</div>'+
       '<span class="chip '+st.cls+'">'+esc(st.lbl)+'</span>';
     if(s.nota)h+='<div class="s">'+esc(s.nota)+'</div>';
-    if(acts==="pan"&&!S.ro)h+='<div class="acts"><button type="button" class="btn sm" data-fatto="'+esc(s.id)+'">✓ Segna come fatta</button></div>';
-    else if(acts&&!S.ro)h+='<div class="acts"><button type="button" class="btn sm" data-fatto="'+esc(s.id)+'">✓ Fatta</button><button type="button" class="btn sm" data-mod-scad="'+esc(s.id)+'">Modifica</button><button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button></div>';
+    if(acts&&acts!=="pan"&&!S.ro)h+='<div class="acts"><button type="button" class="btn sm" data-mod-scad="'+esc(s.id)+'">Modifica</button><button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button></div>';
     return h+"</li>";
   }
   function voceTitolo(e){
@@ -1638,7 +1645,16 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     try{await installEvt.userChoice;}catch(e){}
     installEvt=null;$("#install-bar").hidden=true;
   });
-  if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}
+  if("serviceWorker" in navigator){
+    var avevaSW=!!navigator.serviceWorker.controller,ricarico=false;
+    navigator.serviceWorker.addEventListener("controllerchange",function(){if(avevaSW&&!ricarico){ricarico=true;location.reload();}});
+    window.addEventListener("load",function(){
+      navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(reg){
+        reg.update().catch(function(){});
+        document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")reg.update().catch(function(){});});
+      }).catch(function(){});
+    });
+  }
 
   /* ---------- avvio ---------- */
   S.mese=mk(today());

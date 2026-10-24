@@ -1,6 +1,6 @@
 // Garage: rende l'app disponibile anche senza connessione.
 // Quando pubblichi una nuova versione, cambia VERSIONE.
-const VERSIONE = "garage-v2";
+const VERSIONE = "garage-v3";
 const BASE = [
   "./",
   "./index.html",
@@ -29,10 +29,10 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // La pagina: prima la rete, così gli aggiornamenti arrivano subito; senza rete, la copia salvata.
+  // La pagina: sempre la versione più recente dalla rete (senza la cache del browser); senza rete, la copia salvata.
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req)
+      fetch(req.url, { cache: "no-store", credentials: "same-origin" })
         .then((res) => {
           const copia = res.clone();
           caches.open(VERSIONE).then((c) => c.put("./index.html", copia));
