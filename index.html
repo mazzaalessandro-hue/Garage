@@ -23,6 +23,12 @@ body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 .installbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 10px 14px;margin:0 0 16px;font-weight:600}
+/* pannello "segna come fatta" */
+.check{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer}
+.check input{width:22px;height:22px;padding:0;margin:0;flex:none;accent-color:var(--c-man)}
+.nextbox{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.nextbox input:not([type=checkbox]){background:var(--surface)}
+.fs-sub{margin:2px 0 0}
 /* calendario */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .cal .wd{font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--muted);text-align:center;padding:2px 0 4px}
@@ -587,6 +593,32 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   </form>
 </div>
 
+<!-- pannello: segna come fatta -->
+<div class="sheet" id="fs" hidden>
+  <form class="panel" id="fs-form" novalidate aria-labelledby="fs-t">
+    <div class="sec-head"><div style="min-width:0"><h2 id="fs-t">Scadenza</h2><p class="meta fs-sub" id="fs-sub"></p></div><button type="button" class="iconbtn" data-close="fs" aria-label="Chiudi">×</button></div>
+    <div class="row2">
+      <div class="field"><label for="fs-data">Fatta il</label><input type="date" id="fs-data"></div>
+      <div class="field"><label for="fs-km">Km al momento</label><input id="fs-km" inputmode="numeric" autocomplete="off"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="fs-importo">Costo (€)</label><input id="fs-importo" inputmode="decimal" autocomplete="off" placeholder="0,00"></div>
+      <div class="field"><label for="fs-dove" id="fs-dove-l">Officina</label><input id="fs-dove" autocomplete="off"></div>
+    </div>
+    <div class="field"><label for="fs-note">Note</label><input id="fs-note" autocomplete="off"></div>
+    <div class="nextbox">
+      <label class="check" for="fs-next-on"><input type="checkbox" id="fs-next-on">Programma la prossima scadenza</label>
+      <div class="row2" id="fs-next">
+        <div class="field"><label for="fs-next-data">Prossima entro il</label><input type="date" id="fs-next-data"></div>
+        <div class="field"><label for="fs-next-km">Oppure a km</label><input id="fs-next-km" inputmode="numeric" autocomplete="off"></div>
+      </div>
+      <p class="hint" id="fs-next-hint" style="margin:0"></p>
+    </div>
+    <p class="err" id="fs-err" hidden></p>
+    <button class="btn primary" type="submit" id="fs-save">Salva come fatta</button>
+  </form>
+</div>
+
 <!-- pannello: i tuoi veicoli -->
 <div class="sheet" id="vs" hidden>
   <div class="panel" role="dialog" aria-labelledby="vs-t">
@@ -742,7 +774,8 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     var h='<li class="item"><div class="main"><div class="t">'+esc(s.titolo||"Scadenza")+'</div>'+(meta.length?'<div class="meta">'+esc(meta.join(" · "))+'</div>':"")+'</div>'+
       '<span class="chip '+st.cls+'">'+esc(st.lbl)+'</span>';
     if(s.nota)h+='<div class="s">'+esc(s.nota)+'</div>';
-    if(acts&&!S.ro)h+='<div class="acts"><button type="button" class="btn sm" data-fatto="'+esc(s.id)+'">Fatta</button><button type="button" class="btn sm" data-mod-scad="'+esc(s.id)+'">Modifica</button><button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button></div>';
+    if(acts==="pan"&&!S.ro)h+='<div class="acts"><button type="button" class="btn sm" data-fatto="'+esc(s.id)+'">✓ Segna come fatta</button></div>';
+    else if(acts&&!S.ro)h+='<div class="acts"><button type="button" class="btn sm" data-fatto="'+esc(s.id)+'">✓ Fatta</button><button type="button" class="btn sm" data-mod-scad="'+esc(s.id)+'">Modifica</button><button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button></div>';
     return h+"</li>";
   }
   function voceTitolo(e){
@@ -796,7 +829,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     $("#km-data").textContent=k.data?"aggiornato il "+fmtD(k.data):"";
     var ul=$("#pan-scad"),list=scadAttive().slice(0,4);
     if(!S.ready.s)ul.innerHTML='<li class="empty">Caricamento delle scadenze…</li>';
-    else ul.innerHTML=list.length?list.map(function(x){return scadItem(x,false);}).join(""):'<li class="empty">Nessuna scadenza in programma.</li>';
+    else ul.innerHTML=list.length?list.map(function(x){return scadItem(x,"pan");}).join(""):'<li class="empty">Nessuna scadenza in programma.</li>';
     var mk0=mk(today()),t=totMese(mk0),m=media();
     $("#pan-mese-t").textContent="Spese di "+mLabel(mk0).split(" ")[0];
     var mh='<div class="pm"><div><div class="lbl">Totale del mese</div><div class="total sm">'+EUR.format(t.tot)+'</div></div><div class="mini">'+
@@ -836,7 +869,8 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     var done=S.scadenze.filter(function(s){return s.stato==="fatta";}).sort(function(a,b){return (b.fattaIl||"").localeCompare(a.fattaIl||"");});
     $("#scad-done-wrap").hidden=!done.length;
     $("#scad-done").innerHTML=done.map(function(s){
-      return '<li class="item done"><div class="main"><div class="t">'+esc(s.titolo)+'</div><div class="meta">fatta il '+esc(fmtD(s.fattaIl))+"</div></div>"+
+      var dm=["fatta il "+fmtD(s.fattaIl)];if(isNum(s.kmFatto))dm.push(num(s.kmFatto)+" km");if(isNum(s.importo))dm.push(EUR.format(s.importo));if(s.dove)dm.push(s.dove);
+      return '<li class="item done"><div class="main"><div class="t">'+esc(s.titolo)+'</div><div class="meta">'+esc(dm.join(" · "))+"</div></div>"+
         (S.ro?"":'<button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button>')+"</li>";}).join("");
     $("#scad-new").hidden=S.ro;
   }
@@ -1324,24 +1358,86 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     else{body.stato="attiva";body.tipo="altro";body.fineMese=false;body.creata=iso(today());var ref=col("scadenze").doc();ok=await write(function(){return ref.set(body);},"Scadenza aggiunta");}
     if(ok)closeSheet("ss");
   });
-  async function segnaFatta(id){
-    var s=null;for(var i=0;i<S.scadenze.length;i++){if(S.scadenze[i].id===id)s=S.scadenze[i];}
-    if(!s)return;
-    var t=today(),now=kmNow().km,next=null;
-    var rm=isNum(s.ripeti)&&s.ripeti>0,rk=isNum(s.ripetiKm)&&s.ripetiKm>0&&isNum(now);
-    if(rm||rk){
-      var nd=null;
-      if(rm){var dalFatto=s.fineMese||s.tipo==="tagliando";var b=dalFatto?t:(parseD(s.data)||t);nd=addMonthsD(b,s.ripeti);if(s.fineMese)nd=endOfMonth(nd);}
-      next={titolo:s.titolo,tipo:s.tipo||"altro",data:nd?iso(nd):null,km:rk?Math.round(now+s.ripetiKm):null,
-        ripeti:rm?s.ripeti:null,ripetiKm:isNum(s.ripetiKm)?s.ripetiKm:null,fineMese:!!s.fineMese,nota:s.nota||null,stato:"attiva",creata:iso(t)};
-      if(next.nota&&/^Inserisci/.test(next.nota))next.nota=null;
+  var FS={id:null,touchD:false,touchK:false};
+  function trovaScad(id){for(var i=0;i<S.scadenze.length;i++){if(S.scadenze[i].id===id)return S.scadenze[i];}return null;}
+  function siRipete(s){return (isNum(s.ripeti)&&s.ripeti>0)||(isNum(s.ripetiKm)&&s.ripetiKm>0);}
+  function prossimaPredefinita(s,fattaIso,kmFatto){
+    var nd=null,nk=null,fatta=parseD(fattaIso)||today();
+    if(isNum(s.ripeti)&&s.ripeti>0){
+      var dalFatto=s.fineMese||s.tipo==="tagliando"||!parseD(s.data);
+      nd=addMonthsD(dalFatto?fatta:parseD(s.data),s.ripeti);if(s.fineMese)nd=endOfMonth(nd);
     }
-    var nref=next?col("scadenze").doc():null;
-    await write(async function(){
-      await col("scadenze").doc(id).update({stato:"fatta",fattaIl:iso(t)});
-      if(nref)await nref.set(next);
-    },next?"Fatta. Prossima: "+(next.data?fmtD(next.data):"a "+num(next.km)+" km"):"Segnata come fatta");
+    if(isNum(s.ripetiKm)&&s.ripetiKm>0){var b=isNum(kmFatto)?kmFatto:kmNow().km;if(isNum(b))nk=Math.round(b+s.ripetiKm);}
+    return {data:nd?iso(nd):"",km:nk};
   }
+  function aggiornaProssima(){
+    var s=trovaScad(FS.id);if(!s)return;
+    var on=$("#fs-next-on").checked;
+    $("#fs-next").hidden=!on;$("#fs-next-hint").hidden=!on;
+    var km=parseNum($("#fs-km").value),def=prossimaPredefinita(s,$("#fs-data").value,isNum(km)?km:null);
+    if(!FS.touchD)$("#fs-next-data").value=def.data;
+    if(!FS.touchK)$("#fs-next-km").value=isNum(def.km)?num(def.km):"";
+    var r=[];
+    if(isNum(s.ripeti)&&s.ripeti>0)r.push(s.ripeti===12?"ogni anno":s.ripeti===24?"ogni 2 anni":"ogni "+s.ripeti+" mesi");
+    if(isNum(s.ripetiKm)&&s.ripetiKm>0)r.push("ogni "+num(s.ripetiKm)+" km");
+    $("#fs-next-hint").textContent=r.length?"Calcolata in automatico ("+r.join(" o ")+(s.fineMese?", entro la fine del mese":"")+"). Puoi cambiarla.":"Questa scadenza non si ripete da sola: inserisci tu la data o i km se vuoi un promemoria.";
+  }
+  function apriFatta(id){
+    var s=trovaScad(id);if(!s)return;
+    FS.id=id;FS.touchD=false;FS.touchK=false;
+    $("#fs-form").reset();showErr($("#fs-err"),"");
+    $("#fs-t").textContent=s.titolo||"Scadenza";
+    $("#fs-sub").textContent="Segna come fatta"+(parseD(s.data)?" · era in scadenza il "+fmtD(s.data):"");
+    $("#fs-data").value=iso(today());
+    var k=kmNow().km;$("#fs-km").placeholder=isNum(k)?"es. "+num(k):"es. 45.300";
+    var lab={assicurazione:["Compagnia","es. nome dell'assicurazione"],bollo:["Pagato tramite","es. PagoPA, app IO"],revisione:["Centro revisioni","es. nome e città"],tagliando:["Officina","es. officina Opel"]}[s.tipo]||["Officina o negozio",""];
+    $("#fs-dove-l").textContent=lab[0];$("#fs-dove").placeholder=lab[1];
+    $("#fs-note").placeholder=s.tipo==="tagliando"?"es. cambiati filtro abitacolo e liquido freni":s.tipo==="assicurazione"?"es. numero di polizza, massimale":"";
+    $("#fs-next-on").checked=siRipete(s);
+    aggiornaProssima();
+    openSheet("fs");
+  }
+  ["#fs-data","#fs-km"].forEach(function(q){$(q).addEventListener("input",aggiornaProssima);$(q).addEventListener("change",aggiornaProssima);});
+  $("#fs-next-on").addEventListener("change",aggiornaProssima);
+  $("#fs-next-data").addEventListener("input",function(){FS.touchD=true;});
+  $("#fs-next-km").addEventListener("input",function(){FS.touchK=true;});
+  $("#fs-form").addEventListener("submit",async function(ev){
+    ev.preventDefault();
+    var s=trovaScad(FS.id),err=$("#fs-err");if(!s){closeSheet("fs");return;}
+    var data=$("#fs-data").value;
+    if(!parseD(data))return showErr(err,"Inserisci la data in cui l'hai fatta.");
+    var km=parseNum($("#fs-km").value);
+    if(km!==null&&(isNaN(km)||km<0))return showErr(err,"I km non sono un numero valido.");
+    var imp=parseNum($("#fs-importo").value);
+    if(imp!==null&&(isNaN(imp)||imp<0))return showErr(err,"Il costo non è un numero valido.");
+    var dove=$("#fs-dove").value.trim(),note=$("#fs-note").value.trim();
+    var next=null;
+    if($("#fs-next-on").checked){
+      var nd=$("#fs-next-data").value,nk=parseNum($("#fs-next-km").value);
+      if(nk!==null&&(isNaN(nk)||nk<=0))return showErr(err,"I km della prossima scadenza non sono validi.");
+      if(!parseD(nd)&&nk===null)return showErr(err,"Inserisci la data o i km della prossima scadenza, oppure togli la spunta.");
+      next={titolo:s.titolo,tipo:s.tipo||"altro",data:parseD(nd)?nd:null,km:nk===null?null:Math.round(nk),
+        ripeti:isNum(s.ripeti)?s.ripeti:null,ripetiKm:isNum(s.ripetiKm)?s.ripetiKm:null,fineMese:!!s.fineMese,
+        nota:"Ultima fatta il "+fmtD(data)+(km!==null?" a "+num(Math.round(km))+" km":"")+".",stato:"attiva",creata:iso(today())};
+    }
+    showErr(err,"");
+    km=km===null?null:Math.round(km);imp=imp===null?null:Math.round(imp*100)/100;
+    var spesa=s.tipo==="assicurazione"||s.tipo==="bollo";
+    var voce=null;
+    if(!spesa)voce={tipo:"manutenzione",data:data,km:km,importo:imp,descrizione:s.titolo||"Manutenzione",note:[dove,note].filter(Boolean).join(" · ")||null,scadenza:s.id,creato:new Date().toISOString()};
+    else if(imp!==null)voce={tipo:"spesa",data:data,km:km,importo:imp,categoria:s.tipo,descrizione:dove||null,note:note||null,scadenza:s.id,creato:new Date().toISOString()};
+    var cur=kmNow().km,lref=(km!==null&&(!isNum(cur)||km>cur))?col("letture").doc():null;
+    var vref=voce?col("registro").doc():null,nref=next?col("scadenze").doc():null,id=s.id;
+    var btn=$("#fs-save");btn.disabled=true;
+    var ok=await write(async function(){
+      await col("scadenze").doc(id).update({stato:"fatta",fattaIl:data,kmFatto:km,importo:imp,dove:dove||null,noteFatto:note||null});
+      if(vref)await vref.set(voce);
+      if(lref){await lref.set({data:data,km:km});await vRef().update({kmAttuali:km,kmData:data});}
+      if(nref)await nref.set(next);
+    },"Fatta"+(next?". Prossima: "+(next.data?fmtD(next.data):"a "+num(next.km)+" km"):""));
+    btn.disabled=false;
+    if(ok){closeSheet("fs");render();}
+  });
 
   /* ---------- click delegati ---------- */
   var armed=null,armedT=null;
@@ -1353,7 +1449,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   }
   document.addEventListener("click",async function(e){
     var b=e.target.closest("button");
-    if(b&&b.dataset.fatto){b.disabled=true;await segnaFatta(b.dataset.fatto);return;}
+    if(b&&b.dataset.fatto){apriFatta(b.dataset.fatto);return;}
     if(b&&b.dataset.modScad){var s=null;S.scadenze.forEach(function(x){if(x.id===b.dataset.modScad)s=x;});if(s)apriScad(s);return;}
     if(b&&b.dataset.delScad){
       if(!arm(b,"s:"+b.dataset.delScad,"Conferma eliminazione"))return;
