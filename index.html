@@ -23,6 +23,34 @@ body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 .installbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 10px 14px;margin:0 0 16px;font-weight:600}
+/* calendario */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .wd{font-family:var(--f-mono);font-size:12px;font-weight:600;color:var(--muted);text-align:center;padding:2px 0 4px}
+.cd{appearance:none;border:0;background:var(--surface);border-radius:10px;min-height:50px;padding:7px 2px 6px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:4px;font:inherit;color:var(--ink);cursor:pointer;min-width:0}
+.cd.blank{background:transparent;cursor:default}
+.cd .n{font-family:var(--f-mono);font-size:14px;line-height:1;font-variant-numeric:tabular-nums}
+.cd.past .n{color:var(--muted)}
+.cd.today{box-shadow:inset 0 0 0 2px var(--accent)}
+.cd[aria-pressed="true"]{background:var(--ink)}
+.cd[aria-pressed="true"] .n{color:var(--surface)}
+.dots{display:flex;gap:3px;height:7px}
+.dots i,.ld{display:inline-block;width:7px;height:7px;border-radius:50%}
+.ld{width:10px;height:10px}
+.k-crit{background:var(--crit)}.k-warn{background:var(--warn)}.k-ok{background:var(--ok)}.k-done{background:var(--muted)}
+.k-stima.k-crit{background:transparent;box-shadow:inset 0 0 0 1.6px var(--crit)}
+.k-stima.k-warn{background:transparent;box-shadow:inset 0 0 0 1.6px var(--warn)}
+.k-stima.k-ok{background:transparent;box-shadow:inset 0 0 0 1.6px var(--ok)}
+.cal-tools{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap}
+.evlist{display:flex;flex-direction:column}
+.ev{appearance:none;width:100%;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 0;border:0;border-top:1px solid var(--line);background:none;color:inherit;font:inherit;text-align:left}
+.ev:first-child{border-top:0}
+button.ev{cursor:pointer}
+.evd{display:flex;flex-direction:column;align-items:center;justify-content:center;width:48px;height:48px;border-radius:10px;background:var(--surface);border:1px solid var(--line)}
+.evd b{font-family:var(--f-display);font-size:22px;line-height:1}
+.evd small{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ev .t{font-weight:600}
+.ev.fatto .t{color:var(--muted)}
+.chip.muted{color:var(--muted);background:var(--surface-2)}
 .backup{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
 /* Layout: libretto digitale per qualsiasi veicolo. Registrazione guidata al primo avvio, poi app a schede con barra in basso; una colonna da telefono (max 720px) */
 :root{
@@ -67,6 +95,9 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background
 .chev{font-size:9px;flex:none}
 .who:disabled .chev{display:none}
 h1{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1;margin:3px 0 0;letter-spacing:.01em}
+h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:430px){h1{font-size:29px}.plate{height:28px;font-size:14px}.plate .num{padding:0 7px}.logo{width:40px;height:40px}}
+@media (max-width:380px){h1{font-size:26px}}
 .plate{display:inline-flex;flex:none;align-items:stretch;height:32px;border:1.5px solid #1A1A1A;border-radius:5px;overflow:hidden;background:#FFFFFF;color:#111111;font-family:var(--f-mono);font-weight:600;font-size:16px;letter-spacing:.07em;cursor:pointer}
 .plate .band{background:#0B3D91;color:#FFFFFF;width:19px;display:flex;align-items:flex-end;justify-content:center;font-size:9px;letter-spacing:0;padding-bottom:3px}
 .plate .num{padding:0 8px;display:flex;align-items:center}
@@ -75,12 +106,12 @@ h1{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1;mar
 
 /* barra delle sezioni */
 .tabbar,.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));user-select:none;-webkit-user-select:none}
-.tabbar-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.tabbar-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
 .actionbar{padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
 .actionbar-in{max-width:560px;margin:0 auto;display:flex;gap:10px}
 .actionbar-in .btn{flex:1}
 .tab{appearance:none;border:0;background:transparent;color:var(--muted);font-family:var(--f-body);font-weight:600;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0 2px;cursor:pointer;min-width:0}
-.tab .pill{display:flex;align-items:center;justify-content:center;width:56px;height:30px;border-radius:15px;transition:background-color .15s}
+.tab .pill{display:flex;align-items:center;justify-content:center;width:52px;height:30px;border-radius:15px;transition:background-color .15s}
 .tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .tab svg .w{fill:var(--surface)}
 .tab:hover{color:var(--ink)}
@@ -297,6 +328,31 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       </div>
     </section>
 
+    <section class="stack" id="p-calendario" role="tabpanel" aria-labelledby="t-calendario" hidden>
+      <div>
+        <div class="month">
+          <button class="iconbtn" type="button" id="cal-prev" aria-label="Mese precedente">‹</button>
+          <div class="name" id="cal-name">—</div>
+          <button class="iconbtn" type="button" id="cal-next" aria-label="Mese successivo">›</button>
+        </div>
+        <div class="cal-tools"><span class="meta" id="cal-hint" style="margin:0">Tocca un giorno per vedere cosa c'è.</span><button class="link" type="button" id="cal-oggi">Oggi</button></div>
+      </div>
+      <div class="cal" id="cal-grid" role="grid" aria-label="Calendario del mese"></div>
+      <div class="legend" style="margin-top:-12px">
+        <span><i class="ld k-crit"></i>Urgente</span><span><i class="ld k-warn"></i>Entro 3 mesi</span><span><i class="ld k-ok"></i>Più avanti</span><span><i class="ld k-ok k-stima"></i>Stimata dai km</span><span><i class="ld k-done"></i>Fatto</span>
+      </div>
+      <div>
+        <div class="sec-head"><h2 id="cal-list-t">Questo mese</h2><button class="link" type="button" id="cal-tutto" hidden>Tutto il mese</button></div>
+        <div class="evlist" id="cal-list"></div>
+        <p class="note" id="cal-next-ev" hidden></p>
+      </div>
+      <div id="cal-nodate-wrap" hidden>
+        <h2>Senza data</h2>
+        <p class="meta" style="margin:0 0 6px">Non compaiono nel calendario finché non inserisci una data o i km.</p>
+        <div class="evlist" id="cal-nodate"></div>
+      </div>
+    </section>
+
     <section class="stack" id="p-auto" role="tabpanel" aria-labelledby="t-auto" hidden>
       <div>
         <div class="sec-head"><h2>Scheda</h2><button class="link" type="button" id="v-edit">Modifica</button></div>
@@ -437,8 +493,10 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.5a8 8 0 1 1 16 0"/><path d="M12 16.5l4.2-5"/><circle cx="12" cy="16.5" r="1.3"/></svg></span>Riepilogo</button>
     <button class="tab" role="tab" id="t-spese" data-tab="spese" aria-selected="false" aria-controls="p-spese">
       <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 7A6 6 0 1 0 17.5 17"/><path d="M5 10.5h8M5 13.5h8"/></svg></span>Spese</button>
+    <button class="tab" role="tab" id="t-calendario" data-tab="calendario" aria-selected="false" aria-controls="p-calendario">
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg></span>Calendario</button>
     <button class="tab" role="tab" id="t-scadenze" data-tab="scadenze" aria-selected="false" aria-controls="p-scadenze">
-      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span>Scadenze</button>
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5v-5a5.5 5.5 0 0 1 11 0v5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>Scadenze</button>
     <button class="tab" role="tab" id="t-auto" data-tab="auto" aria-selected="false" aria-controls="p-auto">
       <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5v-3l2.4-4.8a1.5 1.5 0 0 1 1.3-.8h10.6a1.5 1.5 0 0 1 1.3.8L21 12.5v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M4.5 12h15"/><circle class="w" cx="7.5" cy="16.5" r="1.9"/><circle class="w" cx="16.5" cy="16.5" r="1.9"/></svg></span>Auto</button>
   </div>
@@ -820,6 +878,91 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     $("#storico").innerHTML=st.length?st.map(voceItem).join(""):'<li class="empty">Nessun intervento registrato. Usa Registra → Manutenzione.</li>';
   }
 
+  /* ---------- calendario ---------- */
+  S.calMese=null;S.calGiorno=null;
+  var GSETT=["L","M","M","G","V","S","D"];
+  function kmAlGiorno(){
+    var L=letture();if(L.length<2)return null;
+    var a=L[0],b=L[L.length-1],gg=(b.t-a.t)/86400000;
+    if(gg<20||b.km<=a.km)return null;
+    return (b.km-a.km)/gg;
+  }
+  function eventiCal(){
+    var ev=[],senza=[],now=kmNow().km,rate=kmAlGiorno(),oggi=today();
+    S.scadenze.forEach(function(s){
+      if(s.stato==="fatta"){
+        if(parseD(s.fattaIl))ev.push({data:s.fattaIl,titolo:s.titolo||"Scadenza",kind:"done",chip:"fatta",cls:"muted",sub:"Scadenza completata"});
+        return;
+      }
+      var st=statoScad(s),d=parseD(s.data)?s.data:null,stima=false,sub=[];
+      if(isNum(s.km)){sub.push("a "+num(s.km)+" km");stima=true;}
+      if(!d&&isNum(s.km)&&isNum(now)&&rate){
+        var dd=new Date(oggi);dd.setDate(dd.getDate()+Math.max(0,Math.round((s.km-now)/rate)));d=iso(dd);
+        sub.push("data stimata da circa "+num(rate)+" km al giorno");
+      } else if(d&&stima)sub.push("data stimata");
+      if(!d){senza.push({s:s,st:st});return;}
+      ev.push({data:d,titolo:s.titolo||"Scadenza",kind:st.cls,stima:stima,chip:st.lbl,cls:st.cls,sub:sub.join(" · "),id:s.id});
+    });
+    S.registro.forEach(function(e){
+      if(e.tipo!=="manutenzione"||!parseD(e.data))return;
+      var sub=["Intervento fatto"];if(isNum(e.km))sub.push(num(e.km)+" km");if(isNum(e.importo))sub.push(EUR.format(e.importo));
+      ev.push({data:e.data,titolo:e.descrizione||"Manutenzione",kind:"done",chip:"fatto",cls:"muted",sub:sub.join(" · ")});
+    });
+    ev.sort(function(a,b){return a.data.localeCompare(b.data)||a.titolo.localeCompare(b.titolo);});
+    return {ev:ev,senza:senza};
+  }
+  function dotCls(e){return e.kind==="done"?"k-done":"k-"+e.kind+(e.stima?" k-stima":"");}
+  function evItem(e){
+    var d=parseD(e.data),wd=d.toLocaleDateString("it-IT",{weekday:"short"}).replace(".","");
+    var inner='<span class="evd"><small>'+esc(wd)+'</small><b>'+d.getDate()+'</b></span><span class="main" style="min-width:0"><span class="t" style="display:block">'+esc(e.titolo)+'</span><span class="meta" style="display:block">'+esc(fmtD(e.data)+(e.sub?" · "+e.sub:""))+'</span></span><span class="chip '+e.cls+'">'+esc(e.chip)+'</span>';
+    if(e.id&&!S.ro)return '<button type="button" class="ev" data-mod-scad="'+esc(e.id)+'" aria-label="'+esc(e.titolo)+': modifica">'+inner+"</button>";
+    return '<div class="ev'+(e.kind==="done"?" fatto":"")+'">'+inner+"</div>";
+  }
+  function renderCalendario(){
+    var cur=mk(today()),k=S.calMese||cur,p=k.split("-").map(Number);
+    var first=new Date(p[0],p[1]-1,1),giorni=new Date(p[0],p[1],0).getDate(),off=(first.getDay()+6)%7,oggi=iso(today());
+    var all=eventiCal(),perGiorno={};
+    all.ev.forEach(function(e){if(e.data.slice(0,7)===k)(perGiorno[e.data]=perGiorno[e.data]||[]).push(e);});
+    $("#cal-name").textContent=mLabel(k);
+    $("#cal-oggi").hidden=k===cur&&!S.calGiorno;
+    var h=GSETT.map(function(g){return '<span class="wd" role="columnheader">'+g+"</span>";}).join("");
+    for(var i=0;i<off;i++)h+='<span class="cd blank" aria-hidden="true"></span>';
+    for(var g=1;g<=giorni;g++){
+      var ds=p[0]+"-"+pad(p[1])+"-"+pad(g),evs=perGiorno[ds]||[],cls="cd";
+      if(ds===oggi)cls+=" today";else if(ds<oggi)cls+=" past";
+      var lbl=new Date(p[0],p[1]-1,g).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+(evs.length?", "+evs.length+(evs.length===1?" evento":" eventi"):"");
+      h+='<button type="button" class="'+cls+'" data-day="'+ds+'" aria-pressed="'+(S.calGiorno===ds)+'" aria-label="'+esc(lbl)+'"><span class="n">'+g+'</span><span class="dots">'+
+        evs.slice(0,3).map(function(e){return '<i class="'+dotCls(e)+'"></i>';}).join("")+"</span></button>";
+    }
+    $("#cal-grid").innerHTML=h;
+    var sel=S.calGiorno&&S.calGiorno.slice(0,7)===k?S.calGiorno:null;
+    var lista=sel?(perGiorno[sel]||[]):all.ev.filter(function(e){return e.data.slice(0,7)===k;});
+    $("#cal-list-t").textContent=sel?new Date(parseD(sel)).toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"}):"Eventi di "+mLabel(k).split(" ")[0];
+    $("#cal-tutto").hidden=!sel;
+    $("#cal-list").innerHTML=lista.length?lista.map(evItem).join(""):'<p class="empty">'+(sel?"Niente in programma in questo giorno.":"Nessuna scadenza o manutenzione in questo mese.")+"</p>";
+    var prossimo=null;all.ev.forEach(function(e){if(!prossimo&&e.kind!=="done"&&e.data>=oggi&&e.data.slice(0,7)!==k)prossimo=e;});
+    var nx=$("#cal-next-ev");
+    if(!lista.length&&prossimo){nx.hidden=false;nx.innerHTML='Prossima: <button class="link" type="button" data-cal-vai="'+esc(prossimo.data)+'">'+esc(prossimo.titolo)+", "+esc(fmtD(prossimo.data))+"</button>";}
+    else nx.hidden=true;
+    $("#cal-nodate-wrap").hidden=!all.senza.length;
+    $("#cal-nodate").innerHTML=all.senza.map(function(x){
+      var inner='<span class="evd"><small>—</small><b>?</b></span><span class="main" style="min-width:0"><span class="t" style="display:block">'+esc(x.s.titolo||"Scadenza")+'</span><span class="meta" style="display:block">'+esc(x.s.nota||"Inserisci la data")+'</span></span><span class="chip info">da completare</span>';
+      return S.ro?'<div class="ev">'+inner+"</div>":'<button type="button" class="ev" data-mod-scad="'+esc(x.s.id)+'">'+inner+"</button>";
+    }).join("");
+  }
+  $("#cal-prev").addEventListener("click",function(){S.calMese=addM(S.calMese||mk(today()),-1);S.calGiorno=null;renderCalendario();});
+  $("#cal-next").addEventListener("click",function(){S.calMese=addM(S.calMese||mk(today()),1);S.calGiorno=null;renderCalendario();});
+  $("#cal-oggi").addEventListener("click",function(){S.calMese=mk(today());S.calGiorno=null;renderCalendario();});
+  $("#cal-tutto").addEventListener("click",function(){S.calGiorno=null;renderCalendario();});
+  $("#cal-grid").addEventListener("click",function(e){
+    var b=e.target.closest("[data-day]");if(!b)return;
+    S.calGiorno=S.calGiorno===b.dataset.day?null:b.dataset.day;renderCalendario();
+  });
+  $("#cal-next-ev").addEventListener("click",function(e){
+    var b=e.target.closest("[data-cal-vai]");if(!b)return;
+    S.calMese=b.dataset.calVai.slice(0,7);S.calGiorno=b.dataset.calVai;renderCalendario();
+  });
+
   /* ---------- registrazione veicolo ---------- */
   var VF=["nome","targa","alim","imm","km","rev","rc","bollo","tag-data","tag-km","tag-ogni-km","tag-ogni-mesi","gomme","pna","pnp","ppa","ppp","batt","casa","gar-fine","gar-km"];
   function vfEl(id){return document.getElementById("vf-"+id);}
@@ -951,7 +1094,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   vfEl("alim").addEventListener("change",function(){if(S.onb)renderOnb();});
 
   /* ---------- vista ---------- */
-  var TITOLI={riepilogo:"Riepilogo",spese:"Spese",scadenze:"Scadenze",auto:"Auto"};
+  var TITOLI={riepilogo:"Riepilogo",spese:"Spese",calendario:"Calendario",scadenze:"Scadenze",auto:"Auto"};
   function vista(){
     if(S.failed)return "off";
     if(!S.db||!S.uid)return S.ready.g?"off":"load";
@@ -979,7 +1122,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       $("#app-title").textContent=TITOLI[S.tab];
       who.disabled=false;who.setAttribute("aria-label","Veicolo: "+(S.v.nome||"")+". Tocca per cambiare");
       pb.hidden=!S.v.targa;$("#plate").textContent=S.v.targa||"";
-      renderRiepilogo();renderSpese();renderScadenze();renderAuto();
+      renderRiepilogo();renderSpese();renderCalendario();renderScadenze();renderAuto();
       $("#km-open").hidden=S.ro||!$("#km-form").hidden;
     } else {
       $("#v-name").textContent="Libretto Auto";
@@ -993,7 +1136,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     if(!TITOLI[name])name="riepilogo";
     S.tab=name;
     $$(".tab").forEach(function(b){b.setAttribute("aria-selected",String(b.dataset.tab===name));});
-    ["riepilogo","spese","scadenze","auto"].forEach(function(n){$("#p-"+n).hidden=n!==name;});
+    ["riepilogo","spese","calendario","scadenze","auto"].forEach(function(n){$("#p-"+n).hidden=n!==name;});
     if(vista()==="app")$("#app-title").textContent=TITOLI[name];
     try{localStorage.setItem("libretto-tab",name);}catch(e){}
     window.scrollTo({top:0});
