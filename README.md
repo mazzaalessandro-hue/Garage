@@ -15,6 +15,6 @@ Web app per tenere sotto controllo un'auto (o più di una): spese mensili di ric
 | `index.html` | L'app |
 | `manifest.webmanifest` | Nome, colori e icone per l'installazione |
 | `sw.js` | Funzionamento senza connessione |
-| `icons/`, `favicon.png` | Icone |
+| `*.png` | Icone |
 
 Pubblicata con GitHub Pages dal ramo `main`, cartella principale. Quando si modifica l'app, aumentare `VERSIONE` in `sw.js` perché i telefoni scarichino la versione nuova.
