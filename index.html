@@ -23,12 +23,29 @@ body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 .installbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 10px 14px;margin:0 0 16px;font-weight:600}
+/* targa cliccabile e barra a 5 voci sugli schermi stretti */
+.plate{transition:transform .1s}
+.plate:active{transform:scale(.96)}
+.plate[aria-current="page"]{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)}
+.tab .tl{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:400px){
+  .tabbar{padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
+  .tab{font-size:10.5px;letter-spacing:-.01em}.tab .pill{width:44px}
+}
+/* manutenzione */
+.pi .main{cursor:pointer}
+.pi:not(.open) .s{display:none}
+.pi .more{color:var(--accent-ink);font-size:13px;font-weight:600;margin-left:6px;white-space:nowrap}
+.tips{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.tips li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:15px;line-height:1.45}
+.tips li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);margin:8px 0 0 6px}
+.pm-count{display:flex;flex-wrap:wrap;gap:8px}
 /* pulsante con la spunta */
 .item.has-check{grid-template-columns:auto minmax(0,1fr) auto}
 .item.has-check .s,.item.has-check .acts{grid-column:2/-1}
-.tick{appearance:none;width:36px;height:36px;margin-top:-4px;border-radius:50%;border:2px solid color-mix(in srgb,var(--ok) 55%,var(--line));background:var(--surface);color:var(--ok);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
+.tick{appearance:none;width:36px;height:36px;margin-top:-4px;border-radius:50%;border:2px solid var(--line);background:var(--surface);color:color-mix(in srgb,var(--muted) 60%,transparent);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none}
 .tick svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
-.tick:hover,.tick:focus-visible{background:color-mix(in srgb,var(--ok) 14%,var(--surface));border-color:var(--ok)}
+.tick:hover,.tick:focus-visible,.tick:active{background:color-mix(in srgb,var(--ok) 14%,var(--surface));border-color:var(--ok);color:var(--ok)}
 /* pannello "segna come fatta" */
 .check{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer}
 .check input{width:22px;height:22px;padding:0;margin:0;flex:none;accent-color:var(--c-man)}
@@ -109,7 +126,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background
 h1{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1;margin:3px 0 0;letter-spacing:.01em}
 h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media (max-width:430px){h1{font-size:29px}.plate{height:28px;font-size:14px}.plate .num{padding:0 7px}.logo{width:40px;height:40px}}
-@media (max-width:380px){h1{font-size:26px}}
+@media (max-width:380px){h1{font-size:25px}}
 .plate{display:inline-flex;flex:none;align-items:stretch;height:32px;border:1.5px solid #1A1A1A;border-radius:5px;overflow:hidden;background:#FFFFFF;color:#111111;font-family:var(--f-mono);font-weight:600;font-size:16px;letter-spacing:.07em;cursor:pointer}
 .plate .band{background:#0B3D91;color:#FFFFFF;width:19px;display:flex;align-items:flex-end;justify-content:center;font-size:9px;letter-spacing:0;padding-bottom:3px}
 .plate .num{padding:0 8px;display:flex;align-items:center}
@@ -281,7 +298,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       <button class="who" id="who" type="button" disabled><span class="eyebrow"><span id="v-name">Garage</span><span class="chev" aria-hidden="true">▼</span></span></button>
       <h1 id="app-title">Garage</h1>
     </div>
-    <div class="plate" id="plate-box" hidden role="button" tabindex="0" aria-label="Cambia veicolo"><span class="band">I</span><span class="num" id="plate"></span><span class="band" aria-hidden="true"></span></div>
+    <div class="plate" id="plate-box" hidden role="button" tabindex="0" aria-label="Apri la scheda del veicolo"><span class="band">I</span><span class="num" id="plate"></span><span class="band" aria-hidden="true"></span></div>
   </header>
 
   <p class="banner" id="banner" hidden></p>
@@ -305,6 +322,10 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       <div>
         <div class="sec-head"><h2>Prossime scadenze</h2><button class="link" type="button" data-goto="scadenze">Tutte</button></div>
         <ul class="list" id="pan-scad"></ul>
+      </div>
+      <div>
+        <div class="sec-head"><h2>Manutenzione</h2><button class="link" type="button" data-goto="manutenzione">Tutte</button></div>
+        <ul class="list" id="pan-man"></ul>
       </div>
       <div>
         <div class="sec-head"><h2 id="pan-mese-t">Spese del mese</h2><button class="link" type="button" data-goto="spese">Dettaglio</button></div>
@@ -365,7 +386,19 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       </div>
     </section>
 
-    <section class="stack" id="p-auto" role="tabpanel" aria-labelledby="t-auto" hidden>
+    <section class="stack" id="p-manutenzione" role="tabpanel" aria-labelledby="t-manutenzione" hidden>
+      <div>
+        <p class="meta" id="pm-intro" style="margin:0 0 10px"></p>
+        <div class="pm-count" id="pm-count"></div>
+      </div>
+      <div class="stack" id="pm-groups"></div>
+      <div>
+        <h2>Buone abitudini</h2>
+        <ul class="tips" id="pm-tips"></ul>
+      </div>
+    </section>
+
+    <section class="stack" id="p-auto" aria-label="Scheda del veicolo" hidden>
       <div>
         <div class="sec-head"><h2>Scheda</h2><button class="link" type="button" id="v-edit">Modifica</button></div>
         <div class="card"><dl class="spec" id="spec"></dl></div>
@@ -502,15 +535,15 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
 <nav class="tabbar" id="tabbar" aria-label="Sezioni" hidden>
   <div class="tabbar-in" role="tablist">
     <button class="tab" role="tab" id="t-riepilogo" data-tab="riepilogo" aria-selected="true" aria-controls="p-riepilogo">
-      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.5a8 8 0 1 1 16 0"/><path d="M12 16.5l4.2-5"/><circle cx="12" cy="16.5" r="1.3"/></svg></span>Riepilogo</button>
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.5a8 8 0 1 1 16 0"/><path d="M12 16.5l4.2-5"/><circle cx="12" cy="16.5" r="1.3"/></svg></span><span class="tl">Riepilogo</span></button>
     <button class="tab" role="tab" id="t-spese" data-tab="spese" aria-selected="false" aria-controls="p-spese">
-      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 7A6 6 0 1 0 17.5 17"/><path d="M5 10.5h8M5 13.5h8"/></svg></span>Spese</button>
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 7A6 6 0 1 0 17.5 17"/><path d="M5 10.5h8M5 13.5h8"/></svg></span><span class="tl">Spese</span></button>
     <button class="tab" role="tab" id="t-calendario" data-tab="calendario" aria-selected="false" aria-controls="p-calendario">
-      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg></span>Calendario</button>
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"/></svg></span><span class="tl">Calendario</span></button>
     <button class="tab" role="tab" id="t-scadenze" data-tab="scadenze" aria-selected="false" aria-controls="p-scadenze">
-      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5v-5a5.5 5.5 0 0 1 11 0v5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>Scadenze</button>
-    <button class="tab" role="tab" id="t-auto" data-tab="auto" aria-selected="false" aria-controls="p-auto">
-      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5v-3l2.4-4.8a1.5 1.5 0 0 1 1.3-.8h10.6a1.5 1.5 0 0 1 1.3.8L21 12.5v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M4.5 12h15"/><circle class="w" cx="7.5" cy="16.5" r="1.9"/><circle class="w" cx="16.5" cy="16.5" r="1.9"/></svg></span>Auto</button>
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 16.5v-5a5.5 5.5 0 0 1 11 0v5l1.5 2h-14z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span><span class="tl">Scadenze</span></button>
+    <button class="tab" role="tab" id="t-manutenzione" data-tab="manutenzione" aria-selected="false" aria-controls="p-manutenzione">
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.6 4.4a4.6 4.6 0 0 0-5 6.1l-6 6a1.9 1.9 0 0 0 2.7 2.7l6-6a4.6 4.6 0 0 0 6.1-5l-2.8 2.8-2.5-.7-.7-2.5z"/></svg></span><span class="tl">Manutenzione</span></button>
   </div>
 </nav>
 
@@ -625,11 +658,39 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   </form>
 </div>
 
+<!-- pannello: manutenzione fatta -->
+<div class="sheet" id="ps" hidden>
+  <form class="panel" id="ps-form" novalidate aria-labelledby="ps-t">
+    <div class="sec-head"><div style="min-width:0"><h2 id="ps-t">Manutenzione</h2><p class="meta fs-sub" id="ps-last"></p></div><button type="button" class="iconbtn" data-close="ps" aria-label="Chiudi">×</button></div>
+    <p class="meta" id="ps-tip" style="margin:0"></p>
+    <div class="row2">
+      <div class="field"><label for="ps-data">Fatto il</label><input type="date" id="ps-data"></div>
+      <div class="field"><label for="ps-km">Km (facoltativo)</label><input id="ps-km" inputmode="numeric" autocomplete="off"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="ps-importo">Costo (€)</label><input id="ps-importo" inputmode="decimal" autocomplete="off" placeholder="facoltativo"></div>
+      <div class="field"><label for="ps-note">Note</label><input id="ps-note" autocomplete="off"></div>
+    </div>
+    <div class="nextbox">
+      <p class="sub" style="margin:0">Ogni quanto</p>
+      <div class="row2">
+        <div class="field"><label for="ps-mesi">Mesi</label><input id="ps-mesi" inputmode="numeric" autocomplete="off"></div>
+        <div class="field"><label for="ps-ogni-km">Oppure km</label><input id="ps-ogni-km" inputmode="numeric" autocomplete="off"></div>
+      </div>
+      <p class="hint" style="margin:0">Intervallo indicativo: adattalo a quello del tuo libretto.</p>
+    </div>
+    <p class="err" id="ps-err" hidden></p>
+    <button class="btn primary" type="submit" id="ps-save">Segna come fatto</button>
+    <button class="btn ghost" type="button" id="ps-solo">Salva solo l'intervallo</button>
+  </form>
+</div>
+
 <!-- pannello: i tuoi veicoli -->
 <div class="sheet" id="vs" hidden>
   <div class="panel" role="dialog" aria-labelledby="vs-t">
     <div class="sec-head"><h2 id="vs-t">I tuoi veicoli</h2><button type="button" class="iconbtn" data-close="vs" aria-label="Chiudi">×</button></div>
     <div class="vlist" id="vlist"></div>
+    <button class="btn" type="button" id="v-scheda">Apri la scheda del veicolo</button>
     <button class="btn primary" type="button" id="v-add">Aggiungi un veicolo</button>
     <div class="backup">
       <p class="sub" style="margin:0">Backup</p>
@@ -919,6 +980,156 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     $("#storico").innerHTML=st.length?st.map(voceItem).join(""):'<li class="empty">Nessun intervento registrato. Usa Registra → Manutenzione.</li>';
   }
 
+  /* ---------- manutenzione ---------- */
+  S.piano=[];S.openPiano=null;
+  var PIANO=[
+    {id:"pressione",t:"Pressione pneumatici",mesi:1,per:"tutte",tip:"Controllala a gomme fredde, compresa la ruota di scorta se c'è. I valori giusti sono sull'etichetta del montante della portiera lato guida."},
+    {id:"lavavetri",t:"Liquido lavavetri",mesi:1,per:"tutte",tip:"Rabbocca quando serve; d'inverno usa un liquido antigelo."},
+    {id:"freni-rigen",t:"Qualche frenata decisa",mesi:1,per:"rigen",tip:"Con la frenata rigenerativa i dischi lavorano poco e tendono a ossidarsi: ogni tanto, in sicurezza, frena con decisione per pulirli."},
+    {id:"olio-livello",t:"Livello olio motore",mesi:1,per:"ice",tip:"A motore freddo e con l'auto in piano: il livello deve stare tra le tacche MIN e MAX dell'astina."},
+    {id:"pneumatici",t:"Usura e stato dei pneumatici",mesi:3,per:"tutte",tip:"Guarda che il consumo sia uniforme e che non ci siano tagli o bolle. Il minimo di legge è 1,6 mm, ma conviene cambiarli intorno ai 3 mm."},
+    {id:"luci",t:"Luci e frecce",mesi:3,per:"tutte",tip:"Anabbaglianti, abbaglianti, stop, frecce, retromarcia e luce della targa."},
+    {id:"lavaggio",t:"Lavaggio, sottoscocca compreso",mesi:2,per:"tutte",tip:"Soprattutto in inverno: il sale sulle strade favorisce la ruggine."},
+    {id:"refrigerante-motore",t:"Liquido di raffreddamento",mesi:6,per:"ice",tip:"Controlla il livello nella vaschetta a motore freddo. Non aprire mai il tappo a motore caldo."},
+    {id:"refrigerante-batteria",t:"Liquido di raffreddamento della batteria",mesi:12,per:"ev",tip:"Controlla il livello nella vaschetta a freddo; la sostituzione segue il libretto di manutenzione."},
+    {id:"spazzole",t:"Spazzole tergicristallo",mesi:12,per:"tutte",tip:"Cambiale se lasciano righe o fanno rumore: sole e gelo induriscono la gomma."},
+    {id:"filtro-abitacolo",t:"Filtro abitacolo",mesi:12,km:15000,per:"tutte",tip:"Se dalle bocchette esce poca aria o un cattivo odore, è il momento di cambiarlo."},
+    {id:"batteria-12v",t:"Batteria 12 V",mesi:12,per:"tutte",tip:"Falla testare prima dell'inverno: è la causa più comune dell'auto che non si avvia, anche sulle elettriche."},
+    {id:"clima",t:"Climatizzatore",mesi:12,per:"tutte",tip:"Igienizzazione dell'impianto e controllo del gas. Accendilo ogni tanto anche d'inverno: deumidifica i vetri e mantiene l'impianto in salute."},
+    {id:"olio-cambio",t:"Cambio olio e filtro olio",mesi:12,km:15000,per:"ice",tip:"Gli intervalli cambiano molto da motore a motore: adatta i valori a quelli del libretto."},
+    {id:"liquido-freni",t:"Liquido freni",mesi:24,per:"tutte",tip:"Col tempo assorbe umidità e frena peggio: va sostituito anche se il livello è giusto."},
+    {id:"filtro-aria",t:"Filtro aria motore",mesi:24,km:30000,per:"ice",tip:"In zone polverose conviene cambiarlo più spesso."},
+    {id:"filtro-gasolio",t:"Filtro gasolio",mesi:24,km:30000,per:"diesel",tip:"Verifica l'intervallo sul libretto."},
+    {id:"candele",t:"Candele",km:60000,per:"scintilla",tip:"Verifica l'intervallo sul libretto: dipende dal tipo di candele."},
+    {id:"filtri-gpl",t:"Filtri dell'impianto GPL",km:20000,per:"gpl",tip:"Filtro della fase liquida e della fase gassosa: verifica l'intervallo sul libretto dell'impianto."},
+    {id:"distribuzione",t:"Cinghia di distribuzione",per:"ice",tip:"L'intervallo cambia molto da motore a motore, e alcuni hanno una catena che non richiede sostituzione: controlla il libretto e inserisci qui l'intervallo."}
+  ];
+  var ABITUDINI={
+    ev:["Nell'uso di tutti i giorni carica tra il 20 e l'80%; arriva al 100% solo prima di un viaggio lungo.",
+        "Evita di lasciare l'auto ferma a lungo con la batteria quasi vuota o carica al 100%, soprattutto col caldo.",
+        "D'inverno riscalda l'abitacolo mentre l'auto è ancora in carica: parti con più autonomia.",
+        "Le ricariche rapide vanno benissimo in viaggio; per la quotidianità meglio quelle lente."],
+    ice:["Nei primi minuti, a motore freddo, guida senza tirare le marce.",
+        "Ogni tanto fai un tratto lungo a velocità costante: fa bene al motore e, nei diesel, al filtro antiparticolato.",
+        "Non viaggiare a lungo con il serbatoio in riserva."],
+    tutte:["Togli il peso inutile dal bagagliaio e le barre portatutto quando non servono: consumi meno.",
+        "Se senti rumori nuovi, vibrazioni o la frenata cambia, fai controllare l'auto senza aspettare il tagliando."]
+  };
+  function pianoAuto(){
+    var a=alim(),ev=a==="elettrica",ice=a!=="elettrica";
+    return PIANO.filter(function(d){
+      return d.per==="tutte"||(d.per==="ev"&&ev)||(d.per==="ice"&&ice)||(d.per==="rigen"&&(ev||a==="ibrida"||a==="plugin"))||
+        (d.per==="scintilla"&&["benzina","gpl","metano","ibrida","plugin"].indexOf(a)>=0)||(d.per==="diesel"&&a==="diesel")||(d.per==="gpl"&&a==="gpl");
+    });
+  }
+  function pianoDoc(id){for(var i=0;i<S.piano.length;i++){if(S.piano[i].id===id)return S.piano[i];}return {};}
+  function intervallo(d,st){
+    return {mesi:isNum(st.ogniMesi)?st.ogniMesi:(st.ogniMesi===0?null:(d.mesi||null)),km:isNum(st.ogniKm)?st.ogniKm:(st.ogniKm===0?null:(d.km||null))};
+  }
+  function freqLbl(iv){
+    var p=[],m=iv.mesi;
+    if(m)p.push(m===1?"ogni mese":m===12?"ogni anno":m%12===0?"ogni "+(m/12)+" anni":"ogni "+m+" mesi");
+    if(iv.km)p.push("ogni "+num(iv.km)+" km");
+    return p.length?p.join(" o "):"intervallo da inserire";
+  }
+  function statoPiano(d,st){
+    var iv=intervallo(d,st),now=kmNow().km;
+    if(!iv.mesi&&!iv.km)return parseD(st.ultimaData)?{g:"ok",cls:"ok",lbl:"fatto",sort:9}:{g:"mai",cls:"info",lbl:"imposta",sort:2};
+    if(!parseD(st.ultimaData))return {g:"mai",cls:"info",lbl:"da segnare",sort:1};
+    var best=null;
+    if(iv.mesi){var last=parseD(st.ultimaData),due=addMonthsD(last,iv.mesi),tot=Math.max(1,(due-last)/86400000),left=daysTo(iso(due));
+      best={frac:1-left/tot,lbl:left<=0?"da fare":giorniLbl(left)};}
+    if(iv.km&&isNum(st.ultimiKm)&&isNum(now)){var kl=st.ultimiKm+iv.km-now,fk=1-kl/iv.km;
+      if(!best||fk>best.frac)best={frac:fk,lbl:kl<=0?"da fare":"tra "+num(kl)+" km"};}
+    if(!best)return {g:"ok",cls:"ok",lbl:"fatto",sort:9};
+    if(best.frac>=1)return {g:"crit",cls:"crit",lbl:"da fare",sort:-2+(1-best.frac)};
+    if(best.frac>=0.8)return {g:"warn",cls:"warn",lbl:best.lbl,sort:best.frac*-1};
+    return {g:"ok",cls:"ok",lbl:best.lbl,sort:3+(1-best.frac)};
+  }
+  function pianoItem(x){
+    var d=x.d,st=x.st,meta=[freqLbl(intervallo(d,st))];
+    if(parseD(st.ultimaData))meta.push("ultima volta "+fmtD(st.ultimaData));
+    var tick=!S.ro;
+    return '<li class="item pi'+(tick?" has-check":"")+(S.openPiano===d.id?" open":"")+'" data-pi="'+d.id+'">'+
+      (tick?'<button type="button" class="tick" data-piano="'+d.id+'" aria-label="Segna come fatto: '+esc(d.t)+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>':"")+
+      '<div class="main"><div class="t">'+esc(d.t)+'</div><div class="meta">'+esc(meta.join(" · "))+'<span class="more">consigli</span></div></div>'+
+      '<span class="chip '+x.s.cls+'">'+esc(x.s.lbl)+'</span><div class="s">'+esc(d.tip)+'</div></li>';
+  }
+  function pianoStati(){
+    return pianoAuto().map(function(d){var st=pianoDoc(d.id);return {d:d,st:st,s:statoPiano(d,st)};});
+  }
+  function renderManutenzione(){
+    var all=pianoStati(),gr={crit:[],warn:[],mai:[],ok:[]};
+    all.forEach(function(x){gr[x.s.g].push(x);});
+    Object.keys(gr).forEach(function(k){gr[k].sort(function(a,b){return a.s.sort-b.s.sort;});});
+    $("#pm-intro").textContent="Controlli e interventi consigliati per "+((S.v&&S.v.nome)||"il tuo veicolo")+". Sono indicazioni generali: per gli intervalli esatti fa fede il libretto, e puoi adattarli toccando la spunta. Tocca una voce per i consigli.";
+    var c=[];if(gr.crit.length)c.push('<span class="chip crit">'+gr.crit.length+" da fare</span>");if(gr.warn.length)c.push('<span class="chip warn">'+gr.warn.length+" presto</span>");
+    if(gr.mai.length)c.push('<span class="chip info">'+gr.mai.length+" da segnare</span>");if(gr.ok.length)c.push('<span class="chip ok">'+gr.ok.length+" in regola</span>");
+    $("#pm-count").innerHTML=c.join("");
+    var T={crit:"Da fare",warn:"Presto",mai:"Mai segnati",ok:"In regola"},h="";
+    if(!S.ready.pi)h='<p class="empty">Caricamento…</p>';
+    else ["crit","warn","mai","ok"].forEach(function(k){if(gr[k].length)h+='<div><h2>'+T[k]+'</h2><ul class="list">'+gr[k].map(pianoItem).join("")+"</ul></div>";});
+    $("#pm-groups").innerHTML=h;
+    var a=alim(),tips=(usaKwh(a)?ABITUDINI.ev:[]).concat(usaFuel(a)?ABITUDINI.ice:[]).concat(ABITUDINI.tutte);
+    $("#pm-tips").innerHTML=tips.map(function(t){return "<li><span>"+esc(t)+"</span></li>";}).join("");
+    // riepilogo
+    var urg=gr.crit.concat(gr.warn).slice(0,3),ul=$("#pan-man");
+    if(!S.ready.pi)ul.innerHTML='<li class="empty">Caricamento…</li>';
+    else if(urg.length)ul.innerHTML=urg.map(pianoItem).join("");
+    else if(gr.mai.length)ul.innerHTML='<li class="empty">'+gr.mai.length+(gr.mai.length===1?" controllo da segnare":" controlli da segnare")+' per la prima volta: aprili da Manutenzione.</li>';
+    else ul.innerHTML='<li class="empty">Tutto in regola.</li>';
+  }
+  var PS={id:null};
+  function apriPiano(id){
+    var d=null;PIANO.forEach(function(x){if(x.id===id)d=x;});if(!d)return;
+    var st=pianoDoc(id),iv=intervallo(d,st);PS.id=id;
+    $("#ps-form").reset();showErr($("#ps-err"),"");
+    $("#ps-t").textContent=d.t;$("#ps-tip").textContent=d.tip;
+    $("#ps-last").textContent=parseD(st.ultimaData)?"Ultima volta: "+fmtD(st.ultimaData)+(isNum(st.ultimiKm)?" a "+num(st.ultimiKm)+" km":""):"Non l'hai ancora segnato.";
+    $("#ps-data").value=iso(today());
+    var k=kmNow().km;$("#ps-km").placeholder=isNum(k)?"es. "+num(k):"";
+    $("#ps-mesi").value=iv.mesi?String(iv.mesi):"";$("#ps-ogni-km").value=iv.km?num(iv.km):"";
+    openSheet("ps");
+  }
+  function leggiIntervallo(){
+    var m=parseNum($("#ps-mesi").value),k=parseNum($("#ps-ogni-km").value);
+    if(m!==null&&(isNaN(m)||m<1||m>240))return {err:"I mesi devono essere un numero tra 1 e 240."};
+    if(k!==null&&(isNaN(k)||k<100||k>1000000))return {err:"I km dell'intervallo non sono validi."};
+    return {mesi:m===null?0:Math.round(m),km:k===null?0:Math.round(k)};
+  }
+  $("#ps-solo").addEventListener("click",async function(){
+    var iv=leggiIntervallo();if(iv.err)return showErr($("#ps-err"),iv.err);
+    var id=PS.id,prev=pianoDoc(id),body=Object.assign({},prev);delete body.id;body.ogniMesi=iv.mesi;body.ogniKm=iv.km;
+    var ok=await write(function(){return col("piano").doc(id).set(body);},"Intervallo salvato");
+    if(ok)closeSheet("ps");
+  });
+  $("#ps-form").addEventListener("submit",async function(ev){
+    ev.preventDefault();
+    var err=$("#ps-err"),id=PS.id,d=null;PIANO.forEach(function(x){if(x.id===id)d=x;});if(!d){closeSheet("ps");return;}
+    var data=$("#ps-data").value;if(!parseD(data))return showErr(err,"Inserisci la data.");
+    var km=parseNum($("#ps-km").value);if(km!==null&&(isNaN(km)||km<0))return showErr(err,"I km non sono un numero valido.");
+    var imp=parseNum($("#ps-importo").value);if(imp!==null&&(isNaN(imp)||imp<0))return showErr(err,"Il costo non è un numero valido.");
+    var iv=leggiIntervallo();if(iv.err)return showErr(err,iv.err);
+    showErr(err,"");
+    var oggi=iso(today()),cur=kmNow().km;
+    km=km===null?(data===oggi&&isNum(cur)?Math.round(cur):null):Math.round(km);
+    var manuale=$("#ps-km").value.trim()!=="";
+    var prev=pianoDoc(id),note=$("#ps-note").value.trim();
+    var body={ultimaData:data,ultimiKm:km,ogniMesi:iv.mesi,ogniKm:iv.km,volte:(isNum(prev.volte)?prev.volte:0)+1,note:note||null};
+    imp=imp===null?null:Math.round(imp*100)/100;
+    var vref=imp!==null?col("registro").doc():null;
+    var voce=imp!==null?{tipo:"manutenzione",data:data,km:manuale?km:null,importo:imp,descrizione:d.t,note:note||null,piano:id,creato:new Date().toISOString()}:null;
+    var lref=(manuale&&isNum(km)&&(!isNum(cur)||km>cur))?col("letture").doc():null;
+    var btn=$("#ps-save");btn.disabled=true;
+    var ok=await write(async function(){
+      await col("piano").doc(id).set(body);
+      if(vref)await vref.set(voce);
+      if(lref){await lref.set({data:data,km:km});await vRef().update({kmAttuali:km,kmData:data});}
+    },"Segnato come fatto");
+    btn.disabled=false;
+    if(ok){closeSheet("ps");render();}
+  });
+
   /* ---------- calendario ---------- */
   S.calMese=null;S.calGiorno=null;
   var GSETT=["L","M","M","G","V","S","D"];
@@ -1135,7 +1346,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   vfEl("alim").addEventListener("change",function(){if(S.onb)renderOnb();});
 
   /* ---------- vista ---------- */
-  var TITOLI={riepilogo:"Riepilogo",spese:"Spese",calendario:"Calendario",scadenze:"Scadenze",auto:"Auto"};
+  var TITOLI={riepilogo:"Riepilogo",spese:"Spese",calendario:"Calendario",scadenze:"Scadenze",manutenzione:"Manutenzione",auto:"Scheda"};
   function vista(){
     if(S.failed)return "off";
     if(!S.db||!S.uid)return S.ready.g?"off":"load";
@@ -1163,7 +1374,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       $("#app-title").textContent=TITOLI[S.tab];
       who.disabled=false;who.setAttribute("aria-label","Veicolo: "+(S.v.nome||"")+". Tocca per cambiare");
       pb.hidden=!S.v.targa;$("#plate").textContent=S.v.targa||"";
-      renderRiepilogo();renderSpese();renderCalendario();renderScadenze();renderAuto();
+      renderRiepilogo();renderSpese();renderCalendario();renderScadenze();renderManutenzione();renderAuto();
       $("#km-open").hidden=S.ro||!$("#km-form").hidden;
     } else {
       $("#v-name").textContent="Garage";
@@ -1177,7 +1388,8 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     if(!TITOLI[name])name="riepilogo";
     S.tab=name;
     $$(".tab").forEach(function(b){b.setAttribute("aria-selected",String(b.dataset.tab===name));});
-    ["riepilogo","spese","calendario","scadenze","auto"].forEach(function(n){$("#p-"+n).hidden=n!==name;});
+    ["riepilogo","spese","calendario","scadenze","manutenzione","auto"].forEach(function(n){$("#p-"+n).hidden=n!==name;});
+    $("#plate-box").setAttribute("aria-current",name==="auto"?"page":"false");
     if(vista()==="app")$("#app-title").textContent=TITOLI[name];
     try{localStorage.setItem("libretto-tab",name);}catch(e){}
     window.scrollTo({top:0});
@@ -1224,8 +1436,8 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     openSheet("vs");
   }
   $("#who").addEventListener("click",apriVeicoli);
-  $("#plate-box").addEventListener("click",apriVeicoli);
-  $("#plate-box").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();apriVeicoli();}});
+  $("#plate-box").addEventListener("click",function(){setTab("auto");});
+  $("#plate-box").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();setTab("auto");}});
   $("#vlist").addEventListener("click",function(e){
     var b=e.target.closest("[data-vid]");if(!b)return;
     var id=b.dataset.vid;closeSheet("vs");
@@ -1234,6 +1446,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     if(!S.ro)write(function(){return garageRef().set({attivo:id});});
   });
   $("#v-add").addEventListener("click",function(){closeSheet("vs");enterOnb("add");});
+  $("#v-scheda").addEventListener("click",function(){closeSheet("vs");setTab("auto");});
   $("#v-edit").addEventListener("click",function(){enterOnb("edit");});
 
   /* ---------- contachilometri ---------- */
@@ -1457,6 +1670,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   document.addEventListener("click",async function(e){
     var b=e.target.closest("button");
     if(b&&b.dataset.fatto){apriFatta(b.dataset.fatto);return;}
+    if(b&&b.dataset.piano){apriPiano(b.dataset.piano);return;}
     if(b&&b.dataset.modScad){var s=null;S.scadenze.forEach(function(x){if(x.id===b.dataset.modScad)s=x;});if(s)apriScad(s);return;}
     if(b&&b.dataset.delScad){
       if(!arm(b,"s:"+b.dataset.delScad,"Conferma eliminazione"))return;
@@ -1474,6 +1688,9 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       if(!arm(b,"veicolo:"+S.vid,"Conferma: elimina "+(S.v&&S.v.nome?S.v.nome:"il veicolo")))return;
       await eliminaVeicolo();return;
     }
+    var pmain=e.target.closest(".pi .main");
+    if(pmain){var pid=pmain.parentElement.dataset.pi;S.openPiano=S.openPiano===pid?null:pid;
+      $$(".pi").forEach(function(x){x.classList.toggle("open",x.dataset.pi===S.openPiano);});return;}
     var main=e.target.closest(".voce .main");
     if(main&&!S.ro){
       var id=main.parentElement.dataset.voce;
@@ -1484,7 +1701,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   async function eliminaVeicolo(){
     var vid=S.vid,rest=S.veicoli.filter(function(v){return v.id!==vid;});
     var ok=await write(async function(){
-      var names=["registro","scadenze","letture"];
+      var names=["registro","scadenze","letture","piano"];
       for(var i=0;i<names.length;i++){var q=await col(names[i],vid).get();for(var j=0;j<q.docs.length;j++){await col(names[i],vid).doc(q.docs[j].id).delete();}}
       await vRef(vid).delete();
       await garageRef().set({attivo:rest.length?rest[0].id:null});
@@ -1508,10 +1725,10 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   function onErr(){banner("Non riesco a leggere i dati salvati. Ricarica la pagina tra poco.");}
   function subVeicolo(vid){
     unsubV.forEach(function(u){try{u();}catch(e){}});unsubV=[];
-    S.vidSub=vid;S.vid=vid;S.registro=[];S.scadenze=[];S.letture=[];S.openVoce=null;
-    S.ready.r=S.ready.s=S.ready.l=!vid;
+    S.vidSub=vid;S.vid=vid;S.registro=[];S.scadenze=[];S.letture=[];S.piano=[];S.openVoce=null;S.openPiano=null;
+    S.ready.r=S.ready.s=S.ready.l=S.ready.pi=!vid;
     if(!vid){render();return;}
-    [["registro","r"],["scadenze","s"],["letture","l"]].forEach(function(p){
+    [["registro","r"],["scadenze","s"],["letture","l"],["piano","pi"]].forEach(function(p){
       try{
         unsubV.push(col(p[0],vid).onSnapshot(function(q){
           if(S.vidSub!==vid)return;
@@ -1634,7 +1851,6 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   $("#bk-ok").addEventListener("click",function(){$("#bk-confirm").hidden=true;if(bkDocs)ripristina(bkDocs);bkDocs=null;});
   $("#bk-no").addEventListener("click",function(){$("#bk-confirm").hidden=true;bkDocs=null;});
   $("#who").addEventListener("click",function(){$("#bk-confirm").hidden=true;showErr($("#bk-err"),"");aggiornaInfoBackup();});
-  $("#plate-box").addEventListener("click",function(){$("#bk-confirm").hidden=true;showErr($("#bk-err"),"");aggiornaInfoBackup();});
 
   /* ---------- installazione ---------- */
   var installEvt=null;
