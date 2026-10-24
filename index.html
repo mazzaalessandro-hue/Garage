@@ -1,0 +1,1419 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Libretto Auto</title>
+<meta name="description" content="Spese, scadenze e chilometri della tua auto, salvati sul tuo telefono.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#F1F3F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1419" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Libretto Auto">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* base: margini, aree sicure del telefono */
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+.installbar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px 10px 14px;margin:0 0 16px;font-weight:600}
+.backup{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px;margin-top:4px}
+/* Layout: libretto digitale per qualsiasi veicolo. Registrazione guidata al primo avvio, poi app a schede con barra in basso; una colonna da telefono (max 720px) */
+:root{
+  --bg:#F1F3F5;--surface:#FFFFFF;--surface-2:#E6EAEE;--line:#D3DAE1;
+  --ink:#15202B;--muted:#55616D;
+  --accent:#F2C200;--accent-ink:#6B5100;--on-accent:#15202B;
+  --c-en:#B8860B;--c-man:#2F5D8A;--c-alt:#2E7D74;
+  --ok:#2B7A4B;--warn:#A35B00;--crit:#B3261E;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1419;--surface:#161E26;--surface-2:#1F2932;--line:#2B3742;
+  --ink:#E5EAEF;--muted:#97A3AF;
+  --accent:#FFD43B;--accent-ink:#FFD43B;--on-accent:#15202B;
+  --c-en:#F2C21B;--c-man:#72A6DA;--c-alt:#5DB5A9;
+  --ok:#5CC48A;--warn:#F0A33C;--crit:#F2766E;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1419;--surface:#161E26;--surface-2:#1F2932;--line:#2B3742;
+  --ink:#E5EAEF;--muted:#97A3AF;
+  --accent:#FFD43B;--accent-ink:#FFD43B;--on-accent:#15202B;
+  --c-en:#F2C21B;--c-man:#72A6DA;--c-alt:#5DB5A9;
+  --ok:#5CC48A;--warn:#F0A33C;--crit:#F2766E;color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 180px}
+button{-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:2px solid var(--c-man);outline-offset:2px}
+
+/* intestazione */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);display:flex;align-items:center;gap:12px;padding-block:14px 12px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+.hl{min-width:0;flex:1}
+.logo{display:block;flex:none;width:44px;height:44px;border-radius:10px}
+.logo-big{display:block;width:96px;height:96px;margin:4px 0 16px;border-radius:22px;box-shadow:0 8px 22px rgb(0 0 0 / .18)}
+.who{appearance:none;background:none;border:0;padding:2px 0;margin:0;color:inherit;font:inherit;text-align:left;cursor:pointer;display:block;max-width:100%}
+.who:disabled{cursor:default}
+.eyebrow{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0;display:flex;align-items:center;gap:6px;min-width:0}
+#v-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{font-size:9px;flex:none}
+.who:disabled .chev{display:none}
+h1{font-family:var(--f-display);font-weight:700;font-size:34px;line-height:1;margin:3px 0 0;letter-spacing:.01em}
+.plate{display:inline-flex;flex:none;align-items:stretch;height:32px;border:1.5px solid #1A1A1A;border-radius:5px;overflow:hidden;background:#FFFFFF;color:#111111;font-family:var(--f-mono);font-weight:600;font-size:16px;letter-spacing:.07em;cursor:pointer}
+.plate .band{background:#0B3D91;color:#FFFFFF;width:19px;display:flex;align-items:flex-end;justify-content:center;font-size:9px;letter-spacing:0;padding-bottom:3px}
+.plate .num{padding:0 8px;display:flex;align-items:center}
+
+.banner{background:color-mix(in srgb,var(--warn) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 40%,var(--line));border-radius:10px;padding:10px 12px;font-size:14px;margin:0 0 14px}
+
+/* barra delle sezioni */
+.tabbar,.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);border-top:1px solid var(--line);padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));user-select:none;-webkit-user-select:none}
+.tabbar-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.actionbar{padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.actionbar-in{max-width:560px;margin:0 auto;display:flex;gap:10px}
+.actionbar-in .btn{flex:1}
+.tab{appearance:none;border:0;background:transparent;color:var(--muted);font-family:var(--f-body);font-weight:600;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0 2px;cursor:pointer;min-width:0}
+.tab .pill{display:flex;align-items:center;justify-content:center;width:56px;height:30px;border-radius:15px;transition:background-color .15s}
+.tab svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tab svg .w{fill:var(--surface)}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink)}
+.tab[aria-selected="true"] .pill{background:color-mix(in srgb,var(--accent) 42%,transparent)}
+.tab[aria-selected="true"] svg .w{fill:color-mix(in srgb,var(--accent) 42%,var(--surface))}
+
+.stack{display:flex;flex-direction:column;gap:26px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+h2{font-family:var(--f-display);font-weight:600;font-size:21px;letter-spacing:.04em;text-transform:uppercase;margin:0 0 8px;text-wrap:balance}
+.sub{font-family:var(--f-display);font-weight:600;font-size:16px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:6px 0 -4px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.lbl{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.03em}
+.link{appearance:none;background:none;border:0;padding:4px 0;color:var(--accent-ink);font:inherit;font-weight:600;font-size:15px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.meta{font-size:14px;color:var(--muted);margin-top:2px;overflow-wrap:anywhere}
+.note{font-size:14px;color:var(--muted);margin:12px 0 0}
+.intro{font-size:16px;margin:0 0 18px;max-width:60ch}
+.empty{color:var(--muted);font-size:15px;margin:2px 0;padding:6px 0;list-style:none}
+.err{color:var(--crit);font-size:14px;margin:0}
+.hint{color:var(--muted);font-size:13px}
+
+/* contachilometri */
+.odo-card{display:flex;flex-direction:column;gap:12px}
+.odo-row{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
+.odo{display:flex;gap:3px}
+.odo span{font-family:var(--f-mono);font-weight:500;font-size:32px;line-height:1;width:1.12em;padding:9px 0;text-align:center;background:var(--ink);color:var(--surface);border-radius:4px;font-variant-numeric:tabular-nums}
+.odo span.lead{opacity:.35}
+.odo-unit{font-family:var(--f-display);font-weight:600;font-size:20px;color:var(--muted);padding-bottom:4px}
+
+/* bottoni e campi */
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:600;font-size:15px;padding:9px 14px;border-radius:9px;cursor:pointer;min-height:42px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--crit);border-color:color-mix(in srgb,var(--crit) 40%,var(--line))}
+.btn.sm{min-height:34px;padding:5px 10px;font-size:14px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.self-start{align-self:flex-start}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.inline-form .field{flex:1 1 140px}
+.field label{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+input,select{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%;min-width:0}
+input:focus-visible,select:focus-visible{outline:2px solid var(--c-man);outline-offset:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.inline-form{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.inline-form .err{flex-basis:100%}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;background:var(--surface-2);padding:4px;border-radius:10px}
+.seg.four{grid-auto-flow:row;grid-template-columns:1fr 1fr}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:600;font-size:14px;padding:9px 4px;border-radius:7px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgb(0 0 0 / .14)}
+fieldset{border:0;margin:0;padding:0;min-width:0;display:flex;flex-direction:column;gap:14px}
+fieldset h2{margin:0}
+
+/* registrazione guidata */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 6px}
+.steps i{height:5px;border-radius:3px;background:var(--surface-2)}
+.steps i.on{background:var(--accent)}
+.steplbl{font-family:var(--f-mono);font-size:12px;color:var(--muted);margin:0 0 14px;letter-spacing:.04em}
+
+/* liste */
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0}
+.item .main{min-width:0}
+.item .t{font-weight:600}
+.item .s{grid-column:1/-1;font-size:14px;color:var(--muted);margin-top:4px}
+.item .acts{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.voce .main{cursor:pointer}
+.voce:not(.open) .acts{display:none}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.chip{font-family:var(--f-mono);font-size:12px;font-weight:500;padding:3px 9px;border-radius:999px;white-space:nowrap;align-self:start}
+.chip.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,transparent)}
+.chip.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.chip.crit{color:var(--crit);background:color-mix(in srgb,var(--crit) 13%,transparent)}
+.chip.info{color:var(--c-man);background:color-mix(in srgb,var(--c-man) 14%,transparent)}
+.amount{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:500;white-space:nowrap}
+.done .t{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+
+/* spese */
+.total{font-family:var(--f-display);font-weight:700;font-size:50px;line-height:1;font-variant-numeric:tabular-nums;margin:4px 0 10px}
+.total.sm{font-size:38px;margin:2px 0 0}
+.brow{display:grid;grid-template-columns:12px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px}
+.month{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.month .name{font-family:var(--f-display);font-size:24px;font-weight:600;text-transform:capitalize;text-align:center}
+.iconbtn{width:42px;height:42px;flex:none;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+.iconbtn:disabled{opacity:.35;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:14px 16px;margin-top:14px}
+.stat .k{font-size:13px;color:var(--muted);font-weight:600}
+.stat .v{font-family:var(--f-mono);font-weight:500;font-size:17px;font-variant-numeric:tabular-nums}
+.pm{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:end}
+.pm .mini{display:flex;flex-direction:column;gap:4px;font-size:14px}
+.pm .mini div{display:flex;justify-content:space-between;gap:8px}
+@media (max-width:380px){.pm{grid-template-columns:1fr}}
+
+.chart svg{display:block;width:100%;height:auto}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .ax,.chart .mo{fill:var(--muted);font-family:var(--f-mono);font-size:10px}
+.chart .val{fill:var(--ink);font-family:var(--f-mono);font-size:9.5px}
+.chart .mo.cur{fill:var(--ink);font-weight:600}
+.chart .b-en{fill:var(--c-en)}.chart .b-man{fill:var(--c-man)}.chart .b-alt{fill:var(--c-alt)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+
+/* scheda */
+dl.spec{display:grid;grid-template-columns:auto 1fr;gap:9px 16px;margin:0}
+dl.spec dt{color:var(--muted)}
+dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.press{display:grid;grid-template-columns:auto 1fr 1fr;gap:8px 12px;align-items:baseline}
+.press .h{font-size:13px;color:var(--muted);font-weight:600;text-align:center}
+.press .r{color:var(--muted);font-size:15px}
+.press .p{font-family:var(--f-mono);font-size:24px;font-weight:500;text-align:center;font-variant-numeric:tabular-nums}
+.press .p small{font-size:13px;color:var(--muted);margin-left:2px}
+.bars{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.barline{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:5px}
+.bar{height:8px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--c-man);border-radius:4px}
+
+/* veicoli */
+.vrow{appearance:none;width:100%;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 14px;color:var(--ink);font:inherit;cursor:pointer}
+.vrow[aria-current="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.vrow .t{font-weight:600}
+.vlist{display:flex;flex-direction:column;gap:8px}
+
+/* pulsante registra e pannelli */
+.fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(90px + env(safe-area-inset-bottom,0px));z-index:20;display:flex;align-items:center;gap:8px;height:54px;padding:0 22px 0 18px;border-radius:27px;border:0;background:var(--accent);color:var(--on-accent);font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:.05em;text-transform:uppercase;box-shadow:0 6px 18px rgb(0 0 0 / .25);cursor:pointer}
+.fab b{font-size:26px;line-height:1;font-weight:600}
+.sheet{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;background:rgb(8 12 16 / .5)}
+.panel{background:var(--surface);width:100%;max-width:560px;max-height:92%;overflow:auto;border-radius:16px 16px 0 0;padding-top:18px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px;animation:up .2s ease-out}
+.panel h2{margin:0}
+.panel .grp{display:flex;flex-direction:column;gap:12px}
+@keyframes up{from{transform:translateY(28px);opacity:.6}to{transform:none;opacity:1}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(158px + env(safe-area-inset-bottom,0px));z-index:40;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:15px;max-width:calc(100% - 32px);box-shadow:0 4px 14px rgb(0 0 0 / .2)}
+@media (prefers-reduced-motion:reduce){.panel{animation:none}.tab .pill{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
+      <defs><linearGradient id="lg-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E5478"/><stop offset="1" stop-color="#0C1A28"/></linearGradient></defs>
+      <rect width="512" height="512" rx="112" fill="url(#lg-a)"/>
+      <g transform="translate(22 -6)">
+        <path fill="#FFFFFF" d="M112 300L112 238Q112 222 126 214L168 186Q180 178 196 178L290 178Q306 178 318 188L358 226L392 236Q406 240 406 256L406 300Q406 316 390 316L128 316Q112 316 112 300Z"/>
+        <path fill="#245474" d="M150 230L180 200Q186 194 194 194L244 194L244 230ZM258 194L290 194Q298 194 304 200L334 230L258 230Z"/>
+        <rect x="394" y="250" width="12" height="14" rx="3" fill="#F2C200"/>
+      </g>
+      <g fill="#13314A"><circle cx="202" cy="310" r="46"/><circle cx="356" cy="310" r="46"/></g>
+      <g fill="#FFFFFF"><circle cx="202" cy="310" r="36"/><circle cx="356" cy="310" r="36"/></g>
+      <g fill="#13314A"><circle cx="202" cy="310" r="14"/><circle cx="356" cy="310" r="14"/></g>
+      <g fill="#F2C200"><rect x="52" y="214" width="70" height="14" rx="7"/><rect x="36" y="250" width="70" height="14" rx="7"/><rect x="60" y="286" width="70" height="14" rx="7"/></g>
+    </svg>
+    <div class="hl">
+      <button class="who" id="who" type="button" disabled><span class="eyebrow"><span id="v-name">Libretto Auto</span><span class="chev" aria-hidden="true">▼</span></span></button>
+      <h1 id="app-title">Libretto Auto</h1>
+    </div>
+    <div class="plate" id="plate-box" hidden role="button" tabindex="0" aria-label="Cambia veicolo"><span class="band">I</span><span class="num" id="plate"></span><span class="band" aria-hidden="true"></span></div>
+  </header>
+
+  <p class="banner" id="banner" hidden></p>
+  <div class="installbar" id="install-bar" hidden><span>Installa Libretto Auto sul telefono</span><button class="btn primary sm" type="button" id="install">Installa</button></div>
+  <p class="empty" id="loading">Caricamento del tuo garage…</p>
+
+  <!-- APP -->
+  <div id="app" hidden>
+    <section class="stack" id="p-riepilogo" role="tabpanel" aria-labelledby="t-riepilogo">
+      <div class="card odo-card">
+        <div class="sec-head"><span class="lbl">Contachilometri</span><span class="meta" id="km-data"></span></div>
+        <div class="odo-row"><div class="odo" id="odo"></div><span class="odo-unit">km</span></div>
+        <button class="btn self-start" id="km-open" type="button">Aggiorna km</button>
+        <form class="inline-form" id="km-form" hidden novalidate>
+          <div class="field"><label for="km-val">Km attuali</label><input id="km-val" inputmode="numeric" autocomplete="off" placeholder="es. 68.250"></div>
+          <button class="btn primary" type="submit">Salva</button>
+          <button class="btn ghost" type="button" id="km-cancel">Annulla</button>
+          <p class="err" id="km-err" hidden></p>
+        </form>
+      </div>
+      <div>
+        <div class="sec-head"><h2>Prossime scadenze</h2><button class="link" type="button" data-goto="scadenze">Tutte</button></div>
+        <ul class="list" id="pan-scad"></ul>
+      </div>
+      <div>
+        <div class="sec-head"><h2 id="pan-mese-t">Spese del mese</h2><button class="link" type="button" data-goto="spese">Dettaglio</button></div>
+        <div class="card" id="pan-mese"></div>
+      </div>
+    </section>
+
+    <section class="stack" id="p-spese" role="tabpanel" aria-labelledby="t-spese" hidden>
+      <div class="month">
+        <button class="iconbtn" type="button" id="m-prev" aria-label="Mese precedente">‹</button>
+        <div class="name" id="m-name">—</div>
+        <button class="iconbtn" type="button" id="m-next" aria-label="Mese successivo">›</button>
+      </div>
+      <div id="spese-sum"></div>
+      <div>
+        <h2>Ultimi 6 mesi</h2>
+        <div class="card chart"><div id="chart"></div><div class="legend" id="legend"></div></div>
+      </div>
+      <div>
+        <h2>Movimenti del mese</h2>
+        <ul class="list" id="mese-list"></ul>
+      </div>
+    </section>
+
+    <section class="stack" id="p-scadenze" role="tabpanel" aria-labelledby="t-scadenze" hidden>
+      <div>
+        <div class="sec-head"><h2>In programma</h2><button class="link" type="button" id="scad-new">Aggiungi</button></div>
+        <ul class="list" id="scad-list"></ul>
+      </div>
+      <div id="scad-done-wrap" hidden>
+        <h2>Completate</h2>
+        <ul class="list" id="scad-done"></ul>
+      </div>
+    </section>
+
+    <section class="stack" id="p-auto" role="tabpanel" aria-labelledby="t-auto" hidden>
+      <div>
+        <div class="sec-head"><h2>Scheda</h2><button class="link" type="button" id="v-edit">Modifica</button></div>
+        <div class="card"><dl class="spec" id="spec"></dl></div>
+      </div>
+      <div>
+        <h2>Pressione gomme</h2>
+        <div class="card">
+          <div class="press" id="press"></div>
+          <p class="note">A freddo. Il valore ufficiale è sull'etichetta del montante della portiera lato guida.</p>
+        </div>
+      </div>
+      <div id="gar-wrap">
+        <h2>Garanzia batteria</h2>
+        <div class="card" id="garanzia"></div>
+      </div>
+      <div id="casa-wrap">
+        <h2>Energia di casa</h2>
+        <div class="card">
+          <form class="inline-form" id="prezzo-form" novalidate>
+            <div class="field"><label for="prezzo-casa">Prezzo €/kWh</label><input id="prezzo-casa" inputmode="decimal" autocomplete="off" placeholder="es. 0,25"></div>
+            <button class="btn primary" type="submit">Salva</button>
+            <p class="err" id="prezzo-err" hidden></p>
+          </form>
+          <p class="note">Serve a calcolare da solo l'importo delle ricariche a casa.</p>
+        </div>
+      </div>
+      <div>
+        <h2>Storico interventi</h2>
+        <ul class="list" id="storico"></ul>
+      </div>
+      <div>
+        <button class="btn danger" type="button" id="v-del">Elimina questo veicolo</button>
+        <p class="note">Cancella il veicolo con tutte le sue spese, scadenze e letture dei km.</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- REGISTRAZIONE VEICOLO -->
+  <section id="onb" hidden>
+    <div id="onb-steps"><div class="steps"><i></i><i></i><i></i></div><p class="steplbl" id="steplbl"></p></div>
+    <svg class="logo-big" id="onb-logo" viewBox="0 0 512 512" role="img" aria-label="Libretto Auto">
+      <defs><linearGradient id="lg-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E5478"/><stop offset="1" stop-color="#0C1A28"/></linearGradient></defs>
+      <rect width="512" height="512" rx="112" fill="url(#lg-b)"/>
+      <g transform="translate(22 -6)">
+        <path fill="#FFFFFF" d="M112 300L112 238Q112 222 126 214L168 186Q180 178 196 178L290 178Q306 178 318 188L358 226L392 236Q406 240 406 256L406 300Q406 316 390 316L128 316Q112 316 112 300Z"/>
+        <path fill="#245474" d="M150 230L180 200Q186 194 194 194L244 194L244 230ZM258 194L290 194Q298 194 304 200L334 230L258 230Z"/>
+        <rect x="394" y="250" width="12" height="14" rx="3" fill="#F2C200"/>
+      </g>
+      <g fill="#13314A"><circle cx="202" cy="310" r="46"/><circle cx="356" cy="310" r="46"/></g>
+      <g fill="#FFFFFF"><circle cx="202" cy="310" r="36"/><circle cx="356" cy="310" r="36"/></g>
+      <g fill="#13314A"><circle cx="202" cy="310" r="14"/><circle cx="356" cy="310" r="14"/></g>
+      <g fill="#F2C200"><rect x="52" y="214" width="70" height="14" rx="7"/><rect x="36" y="250" width="70" height="14" rx="7"/><rect x="60" y="286" width="70" height="14" rx="7"/></g>
+    </svg>
+    <p class="intro" id="onb-intro"></p>
+    <p class="intro" id="onb-import-wrap" style="margin-top:-8px"><button class="link" type="button" id="onb-import">Hai già un backup? Ripristinalo</button></p>
+    <form id="vf" class="stack" novalidate>
+      <fieldset data-step="1">
+        <h2>Il veicolo</h2>
+        <div class="field"><label for="vf-nome">Marca e modello</label><input id="vf-nome" autocomplete="off" placeholder="es. Fiat Panda"></div>
+        <div class="row2">
+          <div class="field"><label for="vf-targa">Targa</label><input id="vf-targa" autocomplete="off" autocapitalize="characters" placeholder="es. AB123CD"></div>
+          <div class="field"><label for="vf-alim">Alimentazione</label>
+            <select id="vf-alim">
+              <option value="">Scegli…</option>
+              <option value="elettrica">Elettrica</option>
+              <option value="plugin">Ibrida plug-in</option>
+              <option value="ibrida">Ibrida</option>
+              <option value="benzina">Benzina</option>
+              <option value="diesel">Diesel</option>
+              <option value="gpl">GPL</option>
+              <option value="metano">Metano</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="vf-imm">Prima immatricolazione</label><input type="date" id="vf-imm"></div>
+          <div class="field"><label for="vf-km">Km attuali</label><input id="vf-km" inputmode="numeric" autocomplete="off" placeholder="es. 45.300"></div>
+        </div>
+      </fieldset>
+
+      <fieldset data-step="2">
+        <h2>Scadenze</h2>
+        <p class="note" style="margin:0">Tutto facoltativo: se non conosci una data lasciala vuota, la ritrovi tra le scadenze da completare. La revisione la verifichi sul Portale dell'Automobilista, il bollo sul sito della tua Regione.</p>
+        <div class="row2">
+          <div class="field"><label for="vf-rev">Ultima revisione</label><input type="date" id="vf-rev"></div>
+          <div class="field"><label for="vf-rc">Scadenza assicurazione</label><input type="date" id="vf-rc"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="vf-bollo">Scadenza bollo</label><input type="date" id="vf-bollo"></div>
+          <div></div>
+        </div>
+        <p class="sub">Tagliando</p>
+        <div class="row2">
+          <div class="field"><label for="vf-tag-data">Ultimo tagliando</label><input type="date" id="vf-tag-data"></div>
+          <div class="field"><label for="vf-tag-km">Km a quel tagliando</label><input id="vf-tag-km" inputmode="numeric" autocomplete="off"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="vf-tag-ogni-km">Ogni quanti km</label><input id="vf-tag-ogni-km" inputmode="numeric" autocomplete="off" placeholder="es. 20.000"></div>
+          <div class="field"><label for="vf-tag-ogni-mesi">Ogni quanti mesi</label><input id="vf-tag-ogni-mesi" inputmode="numeric" autocomplete="off" placeholder="es. 12"></div>
+        </div>
+      </fieldset>
+
+      <fieldset data-step="3">
+        <h2>Gomme e batteria</h2>
+        <div class="field"><label for="vf-gomme">Misura pneumatici</label><input id="vf-gomme" autocomplete="off" placeholder="es. 205/45 R17"></div>
+        <p class="sub">Carico normale</p>
+        <div class="row2">
+          <div class="field"><label for="vf-pna">Anteriore (bar)</label><input id="vf-pna" inputmode="decimal" autocomplete="off" placeholder="es. 2,3"></div>
+          <div class="field"><label for="vf-pnp">Posteriore (bar)</label><input id="vf-pnp" inputmode="decimal" autocomplete="off" placeholder="es. 2,2"></div>
+        </div>
+        <p class="sub">Pieno carico</p>
+        <div class="row2">
+          <div class="field"><label for="vf-ppa">Anteriore (bar)</label><input id="vf-ppa" inputmode="decimal" autocomplete="off"></div>
+          <div class="field"><label for="vf-ppp">Posteriore (bar)</label><input id="vf-ppp" inputmode="decimal" autocomplete="off"></div>
+        </div>
+        <p class="note" style="margin:0">La pressione è sull'etichetta del montante della portiera lato guida.</p>
+        <div class="stack" id="vf-ev" style="gap:14px">
+          <p class="sub">Batteria</p>
+          <div class="row2">
+            <div class="field"><label for="vf-batt">Capacità (kWh)</label><input id="vf-batt" inputmode="decimal" autocomplete="off" placeholder="es. 50"></div>
+            <div class="field"><label for="vf-casa">Energia di casa (€/kWh)</label><input id="vf-casa" inputmode="decimal" autocomplete="off" placeholder="es. 0,25"></div>
+          </div>
+          <div class="row2">
+            <div class="field"><label for="vf-gar-fine">Garanzia fino al</label><input type="date" id="vf-gar-fine"></div>
+            <div class="field"><label for="vf-gar-km">Garanzia fino a km</label><input id="vf-gar-km" inputmode="numeric" autocomplete="off" placeholder="es. 160.000"></div>
+          </div>
+        </div>
+      </fieldset>
+      <p class="err" id="vf-err" hidden></p>
+    </form>
+  </section>
+</div>
+
+<nav class="tabbar" id="tabbar" aria-label="Sezioni" hidden>
+  <div class="tabbar-in" role="tablist">
+    <button class="tab" role="tab" id="t-riepilogo" data-tab="riepilogo" aria-selected="true" aria-controls="p-riepilogo">
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16.5a8 8 0 1 1 16 0"/><path d="M12 16.5l4.2-5"/><circle cx="12" cy="16.5" r="1.3"/></svg></span>Riepilogo</button>
+    <button class="tab" role="tab" id="t-spese" data-tab="spese" aria-selected="false" aria-controls="p-spese">
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 7A6 6 0 1 0 17.5 17"/><path d="M5 10.5h8M5 13.5h8"/></svg></span>Spese</button>
+    <button class="tab" role="tab" id="t-scadenze" data-tab="scadenze" aria-selected="false" aria-controls="p-scadenze">
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14.5" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></span>Scadenze</button>
+    <button class="tab" role="tab" id="t-auto" data-tab="auto" aria-selected="false" aria-controls="p-auto">
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15.5v-3l2.4-4.8a1.5 1.5 0 0 1 1.3-.8h10.6a1.5 1.5 0 0 1 1.3.8L21 12.5v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M4.5 12h15"/><circle class="w" cx="7.5" cy="16.5" r="1.9"/><circle class="w" cx="16.5" cy="16.5" r="1.9"/></svg></span>Auto</button>
+  </div>
+</nav>
+
+<div class="actionbar" id="onb-bar" hidden>
+  <div class="actionbar-in">
+    <button class="btn" type="button" id="onb-back">Indietro</button>
+    <button class="btn primary" type="button" id="onb-next">Avanti</button>
+  </div>
+</div>
+
+<button class="fab" id="fab" type="button" hidden><b aria-hidden="true">+</b>Registra</button>
+
+<!-- pannello: nuova registrazione -->
+<div class="sheet" id="sheet" hidden>
+  <form class="panel" id="voce-form" novalidate aria-labelledby="sheet-t">
+    <div class="sec-head"><h2 id="sheet-t">Nuova registrazione</h2><button type="button" class="iconbtn" data-close="sheet" aria-label="Chiudi">×</button></div>
+    <div class="seg" id="tipo-seg" role="group" aria-label="Tipo di registrazione"></div>
+    <div class="row2">
+      <div class="field"><label for="v-data">Data</label><input type="date" id="v-data"></div>
+      <div class="field"><label for="v-km">Km (facoltativo)</label><input id="v-km" inputmode="numeric" autocomplete="off" placeholder="es. 68.100"></div>
+    </div>
+    <div class="grp" data-for="ricarica" hidden>
+      <div class="seg" id="luogo-seg" role="group" aria-label="Dove hai ricaricato">
+        <button type="button" data-luogo="casa" aria-pressed="true">Casa</button>
+        <button type="button" data-luogo="colonnina" aria-pressed="false">Colonnina</button>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="v-kwh">kWh</label><input id="v-kwh" inputmode="decimal" autocomplete="off" placeholder="es. 32,5"></div>
+        <div class="field"><label for="v-prezzo">€/kWh</label><input id="v-prezzo" inputmode="decimal" autocomplete="off" placeholder="es. 0,25"></div>
+      </div>
+    </div>
+    <div class="grp" data-for="rifornimento" hidden>
+      <div class="row2">
+        <div class="field"><label for="v-qta" id="v-qta-l">Litri</label><input id="v-qta" inputmode="decimal" autocomplete="off" placeholder="es. 38,2"></div>
+        <div class="field"><label for="v-pu" id="v-pu-l">€/litro</label><input id="v-pu" inputmode="decimal" autocomplete="off" placeholder="es. 1,789"></div>
+      </div>
+    </div>
+    <div class="grp" data-for="manutenzione" hidden>
+      <div class="field"><label for="v-desc-m">Intervento</label><input id="v-desc-m" autocomplete="off" placeholder="es. Tagliando, cambio gomme"></div>
+    </div>
+    <div class="grp" data-for="spesa" hidden>
+      <div class="row2">
+        <div class="field"><label for="v-cat">Categoria</label>
+          <select id="v-cat">
+            <option value="assicurazione">Assicurazione</option>
+            <option value="bollo">Bollo</option>
+            <option value="parcheggi">Parcheggi e pedaggi</option>
+            <option value="lavaggio">Lavaggio</option>
+            <option value="accessori">Accessori</option>
+            <option value="altro">Altro</option>
+          </select>
+        </div>
+        <div class="field"><label for="v-desc-s">Descrizione</label><input id="v-desc-s" autocomplete="off"></div>
+      </div>
+    </div>
+    <div class="field"><label for="v-importo">Importo (€)</label><input id="v-importo" inputmode="decimal" autocomplete="off" placeholder="0,00"><span class="hint" id="v-hint"></span></div>
+    <div class="field"><label for="v-note">Note</label><input id="v-note" autocomplete="off" placeholder="Officina, distributore, stazione di ricarica…"></div>
+    <p class="err" id="v-err" hidden></p>
+    <button class="btn primary" type="submit" id="v-save">Salva</button>
+  </form>
+</div>
+
+<!-- pannello: scadenza -->
+<div class="sheet" id="ss" hidden>
+  <form class="panel" id="ss-form" novalidate aria-labelledby="ss-t">
+    <div class="sec-head"><h2 id="ss-t">Nuova scadenza</h2><button type="button" class="iconbtn" data-close="ss" aria-label="Chiudi">×</button></div>
+    <div class="field"><label for="ss-titolo">Cosa</label><input id="ss-titolo" autocomplete="off" placeholder="es. Cambio gomme invernali"></div>
+    <div class="row2">
+      <div class="field"><label for="ss-data">Entro il</label><input type="date" id="ss-data"></div>
+      <div class="field"><label for="ss-km">Oppure a km</label><input id="ss-km" inputmode="numeric" autocomplete="off" placeholder="es. 75.000"></div>
+    </div>
+    <div class="row2">
+      <div class="field"><label for="ss-ripeti">Si ripete</label>
+        <select id="ss-ripeti">
+          <option value="">No</option>
+          <option value="6">Ogni 6 mesi</option>
+          <option value="12">Ogni anno</option>
+          <option value="24">Ogni 2 anni</option>
+        </select>
+      </div>
+      <div class="field"><label for="ss-ripeti-km">Oppure ogni km</label><input id="ss-ripeti-km" inputmode="numeric" autocomplete="off" placeholder="es. 20.000"></div>
+    </div>
+    <div class="field"><label for="ss-nota">Nota</label><input id="ss-nota" autocomplete="off"></div>
+    <p class="err" id="ss-err" hidden></p>
+    <button class="btn primary" type="submit" id="ss-save">Salva</button>
+  </form>
+</div>
+
+<!-- pannello: i tuoi veicoli -->
+<div class="sheet" id="vs" hidden>
+  <div class="panel" role="dialog" aria-labelledby="vs-t">
+    <div class="sec-head"><h2 id="vs-t">I tuoi veicoli</h2><button type="button" class="iconbtn" data-close="vs" aria-label="Chiudi">×</button></div>
+    <div class="vlist" id="vlist"></div>
+    <button class="btn primary" type="button" id="v-add">Aggiungi un veicolo</button>
+    <div class="backup">
+      <p class="sub" style="margin:0">Backup</p>
+      <p class="meta" id="bk-info" style="margin:0"></p>
+      <div class="inline-form"><button class="btn" type="button" id="bk-exp">Esporta backup</button><button class="btn" type="button" id="bk-imp">Importa backup</button></div>
+      <div id="bk-confirm" hidden>
+        <p class="meta" id="bk-msg" style="margin:0 0 8px"></p>
+        <div class="inline-form"><button class="btn danger" type="button" id="bk-ok">Sostituisci i dati</button><button class="btn ghost" type="button" id="bk-no">Annulla</button></div>
+      </div>
+      <p class="err" id="bk-err" hidden></p>
+    </div>
+  </div>
+</div>
+<input type="file" id="bk-file" accept=".json,application/json" hidden>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+(function(){
+  "use strict";
+  var S={db:null,uid:null,ro:false,canWrite:null,garage:null,veicoli:[],vid:null,vidSub:null,pendingVid:null,v:null,
+    registro:[],scadenze:[],letture:[],ready:{g:false,v:false,r:false,s:false,l:false},
+    tab:"riepilogo",mese:null,tipo:"ricarica",luogo:"casa",importoTouched:false,openVoce:null,onb:null,editScad:null,failed:false};
+  var unsubV=[];
+
+  function $(s){return document.querySelector(s);}
+  function $$(s){return Array.prototype.slice.call(document.querySelectorAll(s));}
+  var EUR=new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR"});
+  var EUR0=new Intl.NumberFormat("it-IT",{style:"currency",currency:"EUR",maximumFractionDigits:0});
+  function num(n,d){d=d||0;return new Intl.NumberFormat("it-IT",{minimumFractionDigits:d,maximumFractionDigits:d}).format(n);}
+  function pad(n){return String(n).padStart(2,"0");}
+  function iso(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+  function parseD(s){if(typeof s!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(s))return null;var p=s.split("-").map(Number);return new Date(p[0],p[1]-1,p[2]);}
+  function today(){var t=new Date();return new Date(t.getFullYear(),t.getMonth(),t.getDate());}
+  function mk(d){return d.getFullYear()+"-"+pad(d.getMonth()+1);}
+  function addM(k,n){var p=k.split("-").map(Number);return mk(new Date(p[0],p[1]-1+n,1));}
+  function addMonthsD(d,n){var y=d.getFullYear(),m=d.getMonth()+n,last=new Date(y,m+1,0).getDate();return new Date(y,m,Math.min(d.getDate(),last));}
+  function endOfMonth(d){return new Date(d.getFullYear(),d.getMonth()+1,0);}
+  function mLabel(k,short){var p=k.split("-").map(Number);var d=new Date(p[0],p[1]-1,1);
+    return short?d.toLocaleDateString("it-IT",{month:"short"}).replace(".",""):d.toLocaleDateString("it-IT",{month:"long",year:"numeric"});}
+  function fmtD(s){var d=parseD(s);return d?d.toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"}):"—";}
+  function daysTo(s){return Math.round((parseD(s)-today())/86400000);}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+  function isNum(v){return typeof v==="number"&&isFinite(v);}
+  function parseNum(s){
+    s=String(s==null?"":s).trim().replace(/\s/g,"").replace(/€/g,"");
+    if(!s)return null;
+    if(/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,"");
+    s=s.replace(",",".");
+    var n=Number(s);return isFinite(n)?n:NaN;
+  }
+  function decIt(n,d){return num(n,d).replace(/\./g,"");}
+  function trimDec(s){return s.indexOf(",")>=0?s.replace(/0+$/,"").replace(/,$/,""):s;}
+
+  /* ---------- percorsi dei dati (privati per persona) ---------- */
+  function base(){return "data/users/"+S.uid+"/garage";}
+  function garageRef(){return S.db.doc(base());}
+  function veicoliCol(){return S.db.collection(base()+"/veicoli");}
+  function vRef(vid){return S.db.doc(base()+"/veicoli/"+(vid||S.vid));}
+  function col(name,vid){return S.db.collection(base()+"/veicoli/"+(vid||S.vid)+"/"+name);}
+
+  /* ---------- alimentazione ---------- */
+  var ALIM={elettrica:"Elettrica",plugin:"Ibrida plug-in",ibrida:"Ibrida",benzina:"Benzina",diesel:"Diesel",gpl:"GPL",metano:"Metano"};
+  function alim(){return (S.v&&S.v.alimentazione)||"benzina";}
+  function usaKwh(a){a=a||alim();return a==="elettrica"||a==="plugin";}
+  function usaFuel(a){a=a||alim();return a!=="elettrica";}
+  function unitFuel(){return alim()==="metano"?"kg":"l";}
+  function enLabel(){var a=alim();return a==="elettrica"?"Ricariche":a==="plugin"?"Ricariche e carburante":"Carburante";}
+
+  /* ---------- calcoli ---------- */
+  var GRP={ricarica:"en",rifornimento:"en",manutenzione:"man",spesa:"alt"};
+  var CAT={assicurazione:"Assicurazione",bollo:"Bollo",parcheggi:"Parcheggi e pedaggi",lavaggio:"Lavaggio",accessori:"Accessori",altro:"Altro"};
+  function letture(){
+    return S.letture.filter(function(l){return parseD(l.data)&&isNum(l.km);})
+      .map(function(l){return {t:parseD(l.data).getTime(),km:l.km,data:l.data};})
+      .sort(function(a,b){return a.t-b.t||a.km-b.km;});
+  }
+  function kmNow(){
+    var L=letture(),p=S.v||{};
+    var km=isNum(p.kmAttuali)?p.kmAttuali:null,data=p.kmData||null;
+    if(L.length){var last=L[L.length-1];if(km===null||last.km>=km){km=last.km;data=last.data;}}
+    return {km:km,data:data};
+  }
+  function interp(L,t){
+    for(var i=0;i<L.length-1;i++){var a=L[i],b=L[i+1];
+      if(t>=a.t&&t<=b.t){return b.t===a.t?b.km:a.km+(b.km-a.km)*(t-a.t)/(b.t-a.t);}}
+    return L[L.length-1].km;
+  }
+  function kmMese(k){
+    var L=letture();if(L.length<2)return null;
+    var p=k.split("-").map(Number);
+    var s=new Date(p[0],p[1]-1,1).getTime(),e=new Date(p[0],p[1],1).getTime();
+    var a=Math.max(s,L[0].t),b=Math.min(e,L[L.length-1].t);
+    if(b<=a)return null;
+    return {km:Math.max(0,Math.round(interp(L,b)-interp(L,a))),parziale:(a>s||b<e)};
+  }
+  function totMese(k){
+    var r={en:0,man:0,alt:0,tot:0,kwh:0,kwhP:0,kwhCost:0,qta:0,qtaP:0,qtaCost:0,voci:[]};
+    S.registro.forEach(function(e){
+      if(typeof e.data!=="string"||e.data.slice(0,7)!==k)return;
+      r.voci.push(e);
+      if(e.tipo==="ricarica"&&isNum(e.kwh))r.kwh+=e.kwh;
+      if(e.tipo==="rifornimento"&&isNum(e.qta))r.qta+=e.qta;
+      if(!isNum(e.importo))return;
+      var g=GRP[e.tipo]||"alt";r[g]+=e.importo;r.tot+=e.importo;
+      if(e.tipo==="ricarica"&&isNum(e.kwh)&&e.kwh>0){r.kwhP+=e.kwh;r.kwhCost+=e.importo;}
+      if(e.tipo==="rifornimento"&&isNum(e.qta)&&e.qta>0){r.qtaP+=e.qta;r.qtaCost+=e.importo;}
+    });
+    return r;
+  }
+  function media(){
+    var ks=S.registro.filter(function(e){return isNum(e.importo)&&typeof e.data==="string";}).map(function(e){return e.data.slice(0,7);}).sort();
+    if(!ks.length)return null;
+    var end=mk(today()),k=ks[0];if(k>end)return null;
+    var n=0,sum=0;while(k<=end){sum+=totMese(k).tot;n++;k=addM(k,1);}
+    return {avg:sum/n,n:n,da:ks[0]};
+  }
+  function giorniLbl(d){
+    if(d<0)return "scaduta";if(d===0)return "oggi";if(d===1)return "domani";
+    if(d<60)return "tra "+d+" giorni";
+    var m=Math.round(d/30.44);if(m<24)return "tra "+m+" mesi";
+    var y=Math.floor(m/12),mm=m%12;return "tra "+y+" anni"+(mm?" e "+mm+(mm===1?" mese":" mesi"):"");
+  }
+  function statoScad(s){
+    var now=kmNow().km;
+    if(isNum(s.km)&&isNum(now)){
+      var rest=s.km-now;
+      return {cls:rest<=1000?"crit":rest<=3000?"warn":"ok",lbl:rest<=0?"da fare":"tra "+num(rest)+" km",
+        sort:parseD(s.data)?daysTo(s.data):rest/30};
+    }
+    if(parseD(s.data)){var d=daysTo(s.data);return {cls:d<=30?"crit":d<=90?"warn":"ok",lbl:giorniLbl(d),sort:d};}
+    return {cls:"info",lbl:"da completare",sort:-1};
+  }
+  function scadAttive(){
+    return S.scadenze.filter(function(s){return s.stato!=="fatta";})
+      .map(function(s){return {s:s,st:statoScad(s)};})
+      .sort(function(a,b){return a.st.sort-b.st.sort;});
+  }
+  function niceMax(v){var p=Math.pow(10,Math.floor(Math.log10(v)));var ms=[1,1.5,2,2.5,3,4,5,6,8,10];for(var i=0;i<ms.length;i++){if(ms[i]*p>=v)return ms[i]*p;}return 10*p;}
+
+  /* ---------- pezzi di interfaccia ---------- */
+  function scadItem(x,acts){
+    var s=x.s,st=x.st,meta=[];
+    if(isNum(s.km))meta.push("a "+num(s.km)+" km");
+    if(parseD(s.data))meta.push((isNum(s.km)?"stima ":"")+fmtD(s.data));
+    if(isNum(s.ripeti)&&s.ripeti>0)meta.push(s.ripeti===12?"ogni anno":s.ripeti===24?"ogni 2 anni":"ogni "+s.ripeti+" mesi");
+    else if(isNum(s.ripetiKm)&&s.ripetiKm>0)meta.push("ogni "+num(s.ripetiKm)+" km");
+    var h='<li class="item"><div class="main"><div class="t">'+esc(s.titolo||"Scadenza")+'</div>'+(meta.length?'<div class="meta">'+esc(meta.join(" · "))+'</div>':"")+'</div>'+
+      '<span class="chip '+st.cls+'">'+esc(st.lbl)+'</span>';
+    if(s.nota)h+='<div class="s">'+esc(s.nota)+'</div>';
+    if(acts&&!S.ro)h+='<div class="acts"><button type="button" class="btn sm" data-fatto="'+esc(s.id)+'">Fatta</button><button type="button" class="btn sm" data-mod-scad="'+esc(s.id)+'">Modifica</button><button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button></div>';
+    return h+"</li>";
+  }
+  function voceTitolo(e){
+    if(e.tipo==="ricarica")return "Ricarica "+(e.luogo==="colonnina"?"alla colonnina":"a casa")+(isNum(e.kwh)?" · "+num(e.kwh,1)+" kWh":"");
+    if(e.tipo==="rifornimento")return "Rifornimento"+(isNum(e.qta)?" · "+num(e.qta,1)+" "+(e.unita||"l"):"");
+    if(e.tipo==="manutenzione")return e.descrizione||"Manutenzione";
+    return (CAT[e.categoria]||"Spesa")+(e.descrizione?" · "+e.descrizione:"");
+  }
+  function voceItem(e){
+    var meta=[fmtD(e.data)];
+    if(isNum(e.km))meta.push(num(e.km)+" km");
+    if(e.tipo==="ricarica"&&isNum(e.prezzoKwh))meta.push(num(e.prezzoKwh,3)+" €/kWh");
+    if(e.tipo==="rifornimento"&&isNum(e.prezzoUnit))meta.push(num(e.prezzoUnit,3)+" €/"+(e.unita||"l"));
+    if(e.note)meta.push(e.note);
+    var g=GRP[e.tipo]||"alt";
+    return '<li class="item voce'+(S.openVoce===e.id?" open":"")+'" data-voce="'+esc(e.id)+'"><div class="main"><div class="t"><span class="dot" style="background:var(--c-'+g+')"></span>'+esc(voceTitolo(e))+'</div><div class="meta">'+esc(meta.join(" · "))+'</div></div>'+
+      '<span class="amount">'+(isNum(e.importo)?EUR.format(e.importo):"—")+'</span>'+
+      (S.ro?"":'<div class="acts"><button type="button" class="btn sm danger" data-del-voce="'+esc(e.id)+'">Elimina</button></div>')+'</li>';
+  }
+  function sortVoci(a,b){return (b.data||"").localeCompare(a.data||"")||(b.creato||"").localeCompare(a.creato||"");}
+  function rowsCat(t){return [["en",enLabel(),t.en],["man","Manutenzione",t.man],["alt","Altre spese",t.alt]];}
+
+  function chart(endK){
+    var ks=[];for(var i=5;i>=0;i--)ks.push(addM(endK,-i));
+    var ds=ks.map(function(k){var t=totMese(k);t.k=k;return t;});
+    var max=Math.max.apply(null,ds.map(function(d){return d.tot;}));
+    if(!(max>0))return '<p class="empty">Le barre compaiono dal primo mese con una spesa registrata.</p>';
+    var top=niceMax(max),W=340,H=180,L=48,R=8,T=18,B=26,ph=H-T-B,cw=(W-L-R)/6,bw=Math.min(30,cw*.58);
+    function y(v){return T+ph*(1-v/top);}
+    var g="";
+    [0,top/2,top].forEach(function(v){var yy=y(v).toFixed(1);
+      g+='<line class="grid" x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'"/><text class="ax" x="'+(L-6)+'" y="'+(y(v)+3.5).toFixed(1)+'" text-anchor="end">'+esc(EUR0.format(v))+'</text>';});
+    ds.forEach(function(d,i){
+      var x=L+cw*i+(cw-bw)/2,acc=0;
+      ["en","man","alt"].forEach(function(c){var v=d[c];if(v>0){var y1=y(acc+v),y0=y(acc);
+        g+='<rect class="b-'+c+'" x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(.8,y0-y1).toFixed(1)+'"/>';acc+=v;}});
+      if(d.tot>0)g+='<text class="val" x="'+(x+bw/2).toFixed(1)+'" y="'+(y(d.tot)-5).toFixed(1)+'" text-anchor="middle">'+esc(EUR0.format(d.tot))+'</text>';
+      g+='<text class="mo'+(d.k===endK?" cur":"")+'" x="'+(x+bw/2).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle">'+esc(mLabel(d.k,true))+'</text>';
+    });
+    return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Spese degli ultimi sei mesi">'+g+'</svg>';
+  }
+
+  /* ---------- render dell'app ---------- */
+  function renderRiepilogo(){
+    var k=kmNow(),odo=$("#odo");
+    var str=isNum(k.km)?String(Math.round(k.km)).padStart(6,"0"):"------";
+    var lead=true,h="";
+    for(var i=0;i<str.length;i++){var c=str[i];if(c!=="0"||i===str.length-1)lead=false;h+='<span class="'+(lead||c==="-"?"lead":"")+'">'+c+"</span>";}
+    odo.innerHTML=h;
+    odo.setAttribute("aria-label",isNum(k.km)?num(k.km)+" chilometri":"chilometri non disponibili");
+    $("#km-data").textContent=k.data?"aggiornato il "+fmtD(k.data):"";
+    var ul=$("#pan-scad"),list=scadAttive().slice(0,4);
+    if(!S.ready.s)ul.innerHTML='<li class="empty">Caricamento delle scadenze…</li>';
+    else ul.innerHTML=list.length?list.map(function(x){return scadItem(x,false);}).join(""):'<li class="empty">Nessuna scadenza in programma.</li>';
+    var mk0=mk(today()),t=totMese(mk0),m=media();
+    $("#pan-mese-t").textContent="Spese di "+mLabel(mk0).split(" ")[0];
+    var mh='<div class="pm"><div><div class="lbl">Totale del mese</div><div class="total sm">'+EUR.format(t.tot)+'</div></div><div class="mini">'+
+      rowsCat(t).map(function(r){return '<div><span><span class="dot" style="background:var(--c-'+r[0]+')"></span>'+esc(r[1])+'</span><span class="amount">'+EUR.format(r[2])+"</span></div>";}).join("")+"</div></div>";
+    mh+=m?'<p class="note">Media mensile da '+esc(mLabel(m.da))+": <strong>"+EUR.format(m.avg)+"</strong></p>":'<p class="note">Registra '+(usaKwh()?"ricariche":"rifornimenti")+' e spese con il pulsante Registra: qui vedrai il totale del mese e la media.</p>';
+    $("#pan-mese").innerHTML=mh;
+  }
+
+  function renderSpese(){
+    var cur=mk(today()),k=S.mese||cur;
+    $("#m-name").textContent=mLabel(k);
+    $("#m-next").disabled=k>=cur;
+    var t=totMese(k),km=kmMese(k),m=media(),u=unitFuel();
+    var h='<div class="card"><div class="lbl">Totale del mese</div><div class="total">'+EUR.format(t.tot)+"</div>";
+    h+=rowsCat(t).map(function(r){return '<div class="brow"><span class="sw" style="background:var(--c-'+r[0]+')"></span><span>'+esc(r[1])+'</span><span class="amount">'+EUR.format(r[2])+"</span></div>";}).join("");
+    var stats=[];
+    if(usaKwh()){stats.push(["Energia caricata",t.kwh>0?num(t.kwh,1)+" kWh":"—"]);stats.push(["Prezzo medio energia",t.kwhP>0?num(t.kwhCost/t.kwhP,3)+" €/kWh":"—"]);}
+    if(usaFuel()){stats.push(["Carburante",t.qta>0?num(t.qta,1)+" "+(u==="l"?"litri":"kg"):"—"]);stats.push(["Prezzo medio carburante",t.qtaP>0?num(t.qtaCost/t.qtaP,3)+" €/"+u:"—"]);}
+    stats.push(["Km nel mese",km?num(km.km)+" km"+(km.parziale?"*":""):"—"]);
+    stats.push([enLabel()+" ogni 100 km",km&&!km.parziale&&km.km>0&&t.en>0?EUR.format(t.en/km.km*100):"—"]);
+    h+='<div class="stats">'+stats.map(function(s){return '<div class="stat"><div class="k">'+esc(s[0])+'</div><div class="v">'+s[1]+"</div></div>";}).join("")+"</div>";
+    if(km&&km.parziale)h+='<p class="note">* Km stimati sulle letture disponibili: il conto si completa con una lettura del mese successivo.</p>';
+    else if(!km)h+='<p class="note">Per i km del mese aggiorna il contachilometri, oppure indica i km quando registri '+(usaKwh()?"una ricarica":"un rifornimento")+'.</p>';
+    if(m)h+='<p class="note">Media mensile da '+esc(mLabel(m.da))+": <strong>"+EUR.format(m.avg)+"</strong> su "+m.n+(m.n===1?" mese":" mesi")+".</p>";
+    h+="</div>";
+    $("#spese-sum").innerHTML=h;
+    $("#chart").innerHTML=chart(k);
+    $("#legend").innerHTML=rowsCat(t).map(function(r){return '<span><i class="sw" style="background:var(--c-'+r[0]+')"></i>'+esc(r[1])+"</span>";}).join("");
+    var voci=t.voci.slice().sort(sortVoci);
+    $("#mese-list").innerHTML=voci.length?voci.map(voceItem).join(""):'<li class="empty">Nessun movimento in '+esc(mLabel(k))+'. Usa il pulsante Registra per aggiungerne uno.</li>';
+  }
+
+  function renderScadenze(){
+    var att=scadAttive(),ul=$("#scad-list");
+    if(!S.ready.s)ul.innerHTML='<li class="empty">Caricamento delle scadenze…</li>';
+    else ul.innerHTML=att.length?att.map(function(x){return scadItem(x,true);}).join(""):'<li class="empty">Nessuna scadenza in programma.</li>';
+    var done=S.scadenze.filter(function(s){return s.stato==="fatta";}).sort(function(a,b){return (b.fattaIl||"").localeCompare(a.fattaIl||"");});
+    $("#scad-done-wrap").hidden=!done.length;
+    $("#scad-done").innerHTML=done.map(function(s){
+      return '<li class="item done"><div class="main"><div class="t">'+esc(s.titolo)+'</div><div class="meta">fatta il '+esc(fmtD(s.fattaIl))+"</div></div>"+
+        (S.ro?"":'<button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button>')+"</li>";}).join("");
+    $("#scad-new").hidden=S.ro;
+  }
+
+  function renderAuto(){
+    var p=S.v||{};
+    var spec=[["Marca e modello",p.nome||"—"],["Targa",p.targa||"—"],["Alimentazione",ALIM[p.alimentazione]||"—"],
+      ["Prima immatricolazione",p.immatricolazione?fmtD(p.immatricolazione):"—"]];
+    if(usaKwh()&&isNum(p.batteriaKwh))spec.push(["Batteria",num(p.batteriaKwh)+" kWh"]);
+    if(isNum(p.potenzaKw))spec.push(["Potenza",num(p.potenzaKw)+" kW"]);
+    spec.push(["Pneumatici",p.pneumatici||"—"]);
+    $("#spec").innerHTML=spec.map(function(r){return "<dt>"+esc(r[0])+"</dt><dd>"+esc(r[1])+"</dd>";}).join("");
+    var pr=p.pressione||{},n=pr.normale||{},f=pr.pieno||{};
+    function cell(v){return '<div class="p">'+(isNum(v)?num(v,1)+"<small>bar</small>":"—")+"</div>";}
+    $("#press").innerHTML='<div></div><div class="h">Anteriore</div><div class="h">Posteriore</div>'+
+      '<div class="r">Carico normale</div>'+cell(n.ant)+cell(n.post)+'<div class="r">Pieno carico</div>'+cell(f.ant)+cell(f.post);
+
+    $("#gar-wrap").hidden=!usaKwh();
+    var gb=p.garanziaBatteria||{},imm=parseD(p.immatricolazione),fine=parseD(gb.fine),km=kmNow().km,gh="";
+    if(fine||isNum(gb.km)){
+      gh='<div class="meta" style="margin:0">Fino '+(fine?"al <strong>"+esc(fmtD(gb.fine))+"</strong>":"")+(fine&&isNum(gb.km)?" o ":"")+(isNum(gb.km)?"a "+num(gb.km)+" km":"")+(isNum(gb.soglia)?". Copre la batteria se la capacità scende sotto il "+gb.soglia+"%.":".")+"</div>";
+      gh+='<div class="bars">';
+      if(imm&&fine){var tot=fine-imm,used=Math.min(Math.max(today()-imm,0),tot),pc=tot>0?used/tot*100:0;
+        gh+='<div><div class="barline"><span>Tempo</span><span class="amount">'+num(used/31557600000,1)+" di "+num(tot/31557600000,0)+' anni</span></div><div class="bar"><i style="width:'+pc.toFixed(1)+'%"></i></div></div>';}
+      if(isNum(gb.km)&&isNum(km)){var pk=Math.min(km/gb.km*100,100);
+        gh+='<div><div class="barline"><span>Chilometri</span><span class="amount">'+num(km)+" di "+num(gb.km)+'</span></div><div class="bar"><i style="width:'+pk.toFixed(1)+'%"></i></div></div>';}
+      gh+="</div>";
+    } else gh='<p class="empty">Inserisci la durata della garanzia con Modifica, in alto nella scheda.</p>';
+    $("#garanzia").innerHTML=gh;
+
+    $("#casa-wrap").hidden=!usaKwh();
+    var inp=$("#prezzo-casa");
+    if(document.activeElement!==inp&&!inp.dataset.dirty)inp.value=isNum(p.prezzoKwhCasa)?trimDec(decIt(p.prezzoKwhCasa,3)):"";
+    $("#prezzo-form").hidden=S.ro;
+    $("#v-edit").hidden=S.ro;
+    $("#v-del").parentElement.hidden=S.ro;
+
+    var st=S.registro.filter(function(e){return e.tipo==="manutenzione";}).sort(sortVoci);
+    $("#storico").innerHTML=st.length?st.map(voceItem).join(""):'<li class="empty">Nessun intervento registrato. Usa Registra → Manutenzione.</li>';
+  }
+
+  /* ---------- registrazione veicolo ---------- */
+  var VF=["nome","targa","alim","imm","km","rev","rc","bollo","tag-data","tag-km","tag-ogni-km","tag-ogni-mesi","gomme","pna","pnp","ppa","ppp","batt","casa","gar-fine","gar-km"];
+  function vfEl(id){return document.getElementById("vf-"+id);}
+  function numStr(v,d){return isNum(v)?trimDec(decIt(v,d||0)):"";}
+  function enterOnb(mode){
+    S.onb={mode:mode,step:1};
+    VF.forEach(function(id){vfEl(id).value="";});
+    showErr($("#vf-err"),"");
+    if(mode==="edit"&&S.v){
+      var p=S.v,pr=p.pressione||{},n=pr.normale||{},f=pr.pieno||{},gb=p.garanziaBatteria||{};
+      vfEl("nome").value=p.nome||"";vfEl("targa").value=p.targa||"";vfEl("alim").value=p.alimentazione||"";
+      vfEl("imm").value=p.immatricolazione||"";vfEl("km").value=isNum(kmNow().km)?num(kmNow().km):"";
+      vfEl("gomme").value=p.pneumatici||"";
+      vfEl("pna").value=numStr(n.ant,2);vfEl("pnp").value=numStr(n.post,2);vfEl("ppa").value=numStr(f.ant,2);vfEl("ppp").value=numStr(f.post,2);
+      vfEl("batt").value=numStr(p.batteriaKwh,1);vfEl("casa").value=numStr(p.prezzoKwhCasa,3);
+      vfEl("gar-fine").value=gb.fine||"";vfEl("gar-km").value=isNum(gb.km)?num(gb.km):"";
+    }
+    window.scrollTo({top:0});
+    render();
+  }
+  function exitOnb(){S.onb=null;window.scrollTo({top:0});render();}
+  function renderOnb(){
+    var o=S.onb,edit=o.mode==="edit";
+    $$("#vf fieldset").forEach(function(fs){var st=Number(fs.dataset.step);fs.hidden=edit?st===2:st!==o.step;});
+    $("#onb-steps").hidden=edit;
+    $$("#onb-steps .steps i").forEach(function(i,ix){i.className=ix<o.step?"on":"";});
+    $("#steplbl").textContent="Passo "+o.step+" di 3";
+    var intro=$("#onb-intro");
+    intro.hidden=edit||o.step!==1;
+    $("#onb-logo").hidden=edit||o.step!==1||o.mode!=="new";
+    $("#onb-import-wrap").hidden=edit||o.step!==1||o.mode!=="new";
+    intro.textContent=o.mode==="new"?"Benvenuto. Registra il tuo veicolo: i dati restano salvati su questo telefono e li vedi solo tu. Le date che non conosci puoi aggiungerle più avanti.":"Aggiungi un altro veicolo al tuo garage. Potrai passare da uno all'altro toccando il nome in alto.";
+    $("#vf-ev").hidden=!usaKwh(vfEl("alim").value||"benzina");
+    var back=$("#onb-back"),next=$("#onb-next");
+    if(edit){back.hidden=false;back.textContent="Annulla";next.textContent="Salva modifiche";}
+    else{
+      back.hidden=o.mode==="new"&&o.step===1;
+      back.textContent=o.step===1?"Annulla":"Indietro";
+      next.textContent=o.step===3?"Salva veicolo":o.step===2?"Avanti":"Avanti";
+    }
+  }
+  function leggiVF(){
+    var e=null;
+    function n(id,label,min,max){var v=parseNum(vfEl(id).value);if(v===null)return null;if(isNaN(v)||(min!=null&&v<min)||(max!=null&&v>max)){if(!e)e=label;return null;}return v;}
+    function d(id){var v=vfEl(id).value;return parseD(v)?v:null;}
+    var r={nome:vfEl("nome").value.trim(),targa:vfEl("targa").value.replace(/\s/g,"").toUpperCase(),alim:vfEl("alim").value,
+      imm:d("imm"),km:n("km","Km attuali",0,3000000),rev:d("rev"),rc:d("rc"),bollo:d("bollo"),
+      tagData:d("tag-data"),tagKm:n("tag-km","Km del tagliando",0,3000000),tagOgniKm:n("tag-ogni-km","Ogni quanti km",500,200000),tagOgniMesi:n("tag-ogni-mesi","Ogni quanti mesi",1,120),
+      gomme:vfEl("gomme").value.trim(),pna:n("pna","Pressione",0.8,6),pnp:n("pnp","Pressione",0.8,6),ppa:n("ppa","Pressione",0.8,6),ppp:n("ppp","Pressione",0.8,6),
+      batt:n("batt","Capacità batteria",1,300),casa:n("casa","Energia di casa",0.001,2),garFine:d("gar-fine"),garKm:n("gar-km","Garanzia km",1000,1000000)};
+    r.errore=e;return r;
+  }
+  function validaStep(step,r){
+    if(step===1){
+      if(!r.nome)return "Scrivi marca e modello del veicolo.";
+      if(!r.alim)return "Scegli l'alimentazione.";
+      if(r.km===null)return r.errore==="Km attuali"?"I km attuali non sono un numero valido.":"Inserisci i km che vedi sul quadro.";
+    }
+    if(r.errore)return "Controlla il campo «"+r.errore+"»: il valore non è valido.";
+    return "";
+  }
+  function genScadenze(r){
+    var out=[],t=today(),oggi=iso(t),imm=parseD(r.imm);
+    var rev=null,revNota;
+    if(r.rev){rev=endOfMonth(addMonthsD(parseD(r.rev),24));revNota="Ogni 2 anni, entro la fine del mese dell'ultima revisione.";}
+    else if(imm){var first=endOfMonth(addMonthsD(imm,48));if(first>=t){rev=first;revNota="Prima revisione: 4 anni dalla prima immatricolazione.";}}
+    out.push({tipo:"revisione",titolo:"Revisione",data:rev?iso(rev):null,km:null,ripeti:24,ripetiKm:null,fineMese:true,
+      nota:rev?revNota:"Inserisci la scadenza: la trovi sul Portale dell'Automobilista con la targa.",stato:"attiva",creata:oggi});
+    out.push({tipo:"assicurazione",titolo:"Assicurazione RC",data:r.rc,km:null,ripeti:12,ripetiKm:null,fineMese:false,
+      nota:r.rc?"Non si rinnova da sola: confronta i preventivi un mese prima.":"Inserisci la data di scadenza della polizza.",stato:"attiva",creata:oggi});
+    out.push({tipo:"bollo",titolo:"Bollo",data:r.bollo,km:null,ripeti:12,ripetiKm:null,fineMese:false,
+      nota:r.bollo?null:"Controlla scadenza ed eventuali esenzioni sul sito della tua Regione.",stato:"attiva",creata:oggi});
+    var tkm=(isNum(r.tagKm)&&isNum(r.tagOgniKm))?Math.round(r.tagKm+r.tagOgniKm):null;
+    var tdata=(r.tagData&&isNum(r.tagOgniMesi))?iso(addMonthsD(parseD(r.tagData),Math.round(r.tagOgniMesi))):null;
+    out.push({tipo:"tagliando",titolo:"Tagliando",data:tdata,km:tkm,ripeti:isNum(r.tagOgniMesi)?Math.round(r.tagOgniMesi):null,ripetiKm:isNum(r.tagOgniKm)?Math.round(r.tagOgniKm):null,fineMese:false,
+      nota:(tdata||tkm)?null:"Inserisci quando va fatto il prossimo: trovi gli intervalli sul libretto di manutenzione.",stato:"attiva",creata:oggi});
+    if(usaKwh(r.alim)&&r.garFine)out.push({tipo:"altro",titolo:"Fine garanzia batteria",data:r.garFine,km:null,ripeti:null,ripetiKm:null,fineMese:false,
+      nota:isNum(r.garKm)?"Oppure a "+num(r.garKm)+" km, se arrivano prima.":null,stato:"attiva",creata:oggi});
+    return out;
+  }
+  function corpoVeicolo(r){
+    var ev=usaKwh(r.alim);
+    return {nome:r.nome,targa:r.targa||null,alimentazione:r.alim,immatricolazione:r.imm,pneumatici:r.gomme||null,
+      pressione:{normale:{ant:r.pna,post:r.pnp},pieno:{ant:r.ppa,post:r.ppp}},
+      batteriaKwh:ev?r.batt:null,prezzoKwhCasa:ev?r.casa:null,
+      garanziaBatteria:ev&&(r.garFine||isNum(r.garKm))?{fine:r.garFine,km:isNum(r.garKm)?Math.round(r.garKm):null}:null};
+  }
+  async function salvaNuovo(r){
+    var vref=veicoliCol().doc(),vid=vref.id,km=Math.round(r.km),oggi=iso(today());
+    var body=corpoVeicolo(r);body.kmAttuali=km;body.kmData=oggi;body.creato=new Date().toISOString();
+    if(body.garanziaBatteria)body.garanziaBatteria.soglia=null;
+    var sc=genScadenze(r),srefs=sc.map(function(){return col("scadenze",vid).doc();}),lref=col("letture",vid).doc();
+    S.pendingVid=vid;
+    var ok=await write(async function(){
+      await vref.set(body);
+      await lref.set({data:oggi,km:km});
+      for(var i=0;i<sc.length;i++)await srefs[i].set(sc[i]);
+      await garageRef().set({attivo:vid});
+    },"Veicolo registrato");
+    if(ok){S.onb=null;S.tab="riepilogo";setTab("riepilogo");scegliAttivo();render();}
+    else S.pendingVid=null;
+  }
+  async function salvaModifiche(r){
+    var body=corpoVeicolo(r),cur=kmNow().km,km=Math.round(r.km);
+    if(isNum(cur)&&km<cur)return showErr($("#vf-err"),"I km non possono essere meno dell'ultima lettura ("+num(cur)+" km).");
+    var lref=(!isNum(cur)||km>cur)?col("letture").doc():null,oggi=iso(today());
+    if(lref){body.kmAttuali=km;body.kmData=oggi;}
+    var ok=await write(async function(){await vRef().update(body);if(lref)await lref.set({data:oggi,km:km});},"Dati del veicolo salvati");
+    if(ok)exitOnb();
+  }
+  $("#onb-back").addEventListener("click",function(){
+    var o=S.onb;if(!o)return;
+    if(o.mode==="edit"||(o.step===1&&o.mode==="add")){exitOnb();return;}
+    if(o.step>1){o.step--;showErr($("#vf-err"),"");window.scrollTo({top:0});render();}
+  });
+  $("#onb-next").addEventListener("click",async function(){
+    var o=S.onb;if(!o)return;
+    var r=leggiVF(),err=$("#vf-err");
+    if(o.mode==="edit"){
+      var m=validaStep(1,r);if(m)return showErr(err,m);
+      showErr(err,"");this.disabled=true;await salvaModifiche(r);this.disabled=false;return;
+    }
+    var msg=validaStep(o.step,r);if(msg)return showErr(err,msg);
+    showErr(err,"");
+    if(o.step<3){o.step++;window.scrollTo({top:0});render();return;}
+    var m1=validaStep(1,r);if(m1){o.step=1;render();return showErr(err,m1);}
+    this.disabled=true;await salvaNuovo(r);this.disabled=false;
+  });
+  vfEl("alim").addEventListener("change",function(){if(S.onb)renderOnb();});
+
+  /* ---------- vista ---------- */
+  var TITOLI={riepilogo:"Riepilogo",spese:"Spese",scadenze:"Scadenze",auto:"Auto"};
+  function vista(){
+    if(S.failed)return "off";
+    if(!S.db||!S.uid)return S.ready.g?"off":"load";
+    if(!S.ready.g||!S.ready.v)return "load";
+    if(S.onb)return "onb";
+    if(!S.veicoli.length)return S.restoring?"load":S.ro?"ro-empty":"onb-new";
+    if(!S.v)return "load";
+    return "app";
+  }
+  function render(){
+    S.v=null;for(var i=0;i<S.veicoli.length;i++){if(S.veicoli[i].id===S.vid){S.v=S.veicoli[i];break;}}
+    var w=vista();
+    if(w==="onb-new"){S.onb={mode:"new",step:1};enterOnb("new");return;}
+    $("#app").hidden=w!=="app";
+    $("#onb").hidden=w!=="onb";
+    $("#tabbar").hidden=w!=="app";
+    $("#onb-bar").hidden=w!=="onb";
+    $("#fab").hidden=w!=="app"||S.ro;
+    var ld=$("#loading");
+    ld.hidden=!(w==="load"||w==="ro-empty");
+    ld.textContent=w==="ro-empty"?"In questo garage non ci sono ancora veicoli, e con il tuo accesso non puoi registrarne.":"Caricamento del tuo garage…";
+    var who=$("#who"),pb=$("#plate-box");
+    if(w==="app"){
+      $("#v-name").textContent=S.v.nome||"Il tuo veicolo";
+      $("#app-title").textContent=TITOLI[S.tab];
+      who.disabled=false;who.setAttribute("aria-label","Veicolo: "+(S.v.nome||"")+". Tocca per cambiare");
+      pb.hidden=!S.v.targa;$("#plate").textContent=S.v.targa||"";
+      renderRiepilogo();renderSpese();renderScadenze();renderAuto();
+      $("#km-open").hidden=S.ro||!$("#km-form").hidden;
+    } else {
+      $("#v-name").textContent="Libretto Auto";
+      who.disabled=true;pb.hidden=true;
+      $("#app-title").textContent=w==="onb"?(S.onb.mode==="edit"?"Modifica veicolo":"Nuovo veicolo"):"Libretto Auto";
+      if(w==="onb")renderOnb();
+    }
+  }
+
+  function setTab(name){
+    if(!TITOLI[name])name="riepilogo";
+    S.tab=name;
+    $$(".tab").forEach(function(b){b.setAttribute("aria-selected",String(b.dataset.tab===name));});
+    ["riepilogo","spese","scadenze","auto"].forEach(function(n){$("#p-"+n).hidden=n!==name;});
+    if(vista()==="app")$("#app-title").textContent=TITOLI[name];
+    try{localStorage.setItem("libretto-tab",name);}catch(e){}
+    window.scrollTo({top:0});
+  }
+  $$(".tab").forEach(function(b){b.addEventListener("click",function(){setTab(b.dataset.tab);});});
+  $$("[data-goto]").forEach(function(b){b.addEventListener("click",function(){setTab(b.dataset.goto);});});
+  $("#m-prev").addEventListener("click",function(){S.mese=addM(S.mese||mk(today()),-1);renderSpese();});
+  $("#m-next").addEventListener("click",function(){var cur=mk(today());var n=addM(S.mese||cur,1);if(n<=cur){S.mese=n;renderSpese();}});
+
+  /* ---------- messaggi e scritture ---------- */
+  var toastT=null;
+  function toast(msg){var t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true;},3000);}
+  function banner(msg){var b=$("#banner");b.textContent=msg||"";b.hidden=!msg;}
+  function showErr(el,msg){el.textContent=msg||"";el.hidden=!msg;}
+  async function write(fn,okMsg){
+    if(!S.db||!S.uid){toast("Il salvataggio non è disponibile in questa vista.");return false;}
+    try{await fn();chiediPersistenza();if(okMsg)toast(okMsg);return true;}
+    catch(e){
+      var c=e&&e.code;
+      if(c==="unavailable"){
+        try{await new Promise(function(r){setTimeout(r,500+Math.random()*700);});await fn();if(okMsg)toast(okMsg);return true;}catch(e2){c=e2&&e2.code;}
+      }
+      if(c==="quota_exceeded")toast("Memoria del browser piena: esporta un backup ed elimina qualche voce vecchia.");
+      else toast("Non sono riuscito a salvare. Riprova tra poco.");
+      return false;
+    }
+  }
+
+  /* ---------- sheet generici ---------- */
+  function openSheet(id){$("#"+id).hidden=false;document.addEventListener("keydown",escClose);}
+  function closeSheet(id){$("#"+id).hidden=true;if(!$$(".sheet").some(function(s){return !s.hidden;}))document.removeEventListener("keydown",escClose);}
+  function escClose(e){if(e.key==="Escape")$$(".sheet").forEach(function(s){if(!s.hidden)closeSheet(s.id);});}
+  $$("[data-close]").forEach(function(b){b.addEventListener("click",function(){closeSheet(b.dataset.close);});});
+  $$(".sheet").forEach(function(s){s.addEventListener("click",function(e){if(e.target===s)closeSheet(s.id);});});
+
+  /* ---------- cambio veicolo ---------- */
+  function apriVeicoli(){
+    if(vista()!=="app")return;
+    $("#vlist").innerHTML=S.veicoli.map(function(v){
+      var cur=v.id===S.vid;
+      return '<button type="button" class="vrow" data-vid="'+esc(v.id)+'" aria-current="'+cur+'"><span class="t">'+esc(v.nome||"Veicolo")+'</span>'+(cur?'<span class="chip ok">in uso</span>':'<span></span>')+
+        '<span class="meta">'+esc([v.targa,ALIM[v.alimentazione],isNum(v.kmAttuali)?num(v.kmAttuali)+" km":null].filter(Boolean).join(" · "))+"</span></button>";}).join("");
+    $("#v-add").hidden=S.ro;
+    openSheet("vs");
+  }
+  $("#who").addEventListener("click",apriVeicoli);
+  $("#plate-box").addEventListener("click",apriVeicoli);
+  $("#plate-box").addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();apriVeicoli();}});
+  $("#vlist").addEventListener("click",function(e){
+    var b=e.target.closest("[data-vid]");if(!b)return;
+    var id=b.dataset.vid;closeSheet("vs");
+    if(id===S.vid)return;
+    subVeicolo(id);setTab(S.tab);
+    if(!S.ro)write(function(){return garageRef().set({attivo:id});});
+  });
+  $("#v-add").addEventListener("click",function(){closeSheet("vs");enterOnb("add");});
+  $("#v-edit").addEventListener("click",function(){enterOnb("edit");});
+
+  /* ---------- contachilometri ---------- */
+  $("#km-open").addEventListener("click",function(){$("#km-form").hidden=false;$("#km-open").hidden=true;showErr($("#km-err"),"");$("#km-val").value="";$("#km-val").focus();});
+  $("#km-cancel").addEventListener("click",function(){$("#km-form").hidden=true;$("#km-open").hidden=S.ro;});
+  $("#km-form").addEventListener("submit",async function(ev){
+    ev.preventDefault();
+    var km=parseNum($("#km-val").value),cur=kmNow().km,err=$("#km-err");
+    if(km===null||isNaN(km)||km<0)return showErr(err,"Scrivi i km che vedi sul quadro, per esempio 68.250.");
+    km=Math.round(km);
+    if(isNum(cur)&&km<cur)return showErr(err,"Il valore è più basso dell'ultima lettura ("+num(cur)+" km).");
+    showErr(err,"");
+    var lref=col("letture").doc(),oggi=iso(today());
+    var ok=await write(async function(){await lref.set({data:oggi,km:km});await vRef().update({kmAttuali:km,kmData:oggi});},"Contachilometri aggiornato");
+    if(ok){$("#km-form").hidden=true;$("#km-open").hidden=false;}
+  });
+
+  /* ---------- nuova registrazione ---------- */
+  var TIPI={ricarica:"Ricarica",rifornimento:"Rifornimento",manutenzione:"Manutenzione",spesa:"Altra spesa"};
+  function tipiDisponibili(){var t=[];if(usaKwh())t.push("ricarica");if(usaFuel())t.push("rifornimento");t.push("manutenzione","spesa");return t;}
+  function setTipo(t){
+    S.tipo=t;
+    $$("#tipo-seg button").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.tipo===t));});
+    $$("[data-for]").forEach(function(el){el.hidden=el.dataset.for!==t;});
+    $("#v-hint").textContent=t==="ricarica"?"Si calcola da kWh × €/kWh; puoi correggerlo.":t==="rifornimento"?"Si calcola da quantità × prezzo; puoi correggerlo.":t==="manutenzione"?"Lascialo vuoto se non conosci la cifra.":"";
+    $("#v-save").textContent=t==="ricarica"?"Salva ricarica":t==="rifornimento"?"Salva rifornimento":t==="manutenzione"?"Salva intervento":"Salva spesa";
+    S.importoTouched=false;ricalcola();
+    showErr($("#v-err"),"");
+  }
+  function prezzoCasa(){var p=S.v&&S.v.prezzoKwhCasa;return isNum(p)?trimDec(decIt(p,3)):"";}
+  function setLuogo(l){
+    S.luogo=l;
+    $$("#luogo-seg button").forEach(function(b){b.setAttribute("aria-pressed",String(b.dataset.luogo===l));});
+    var pr=$("#v-prezzo"),casa=prezzoCasa();
+    if(l==="casa"&&!pr.value)pr.value=casa;
+    if(l==="colonnina"&&casa&&pr.value===casa)pr.value="";
+    ricalcola();
+  }
+  function ricalcola(){
+    if(S.importoTouched)return;
+    var a,b;
+    if(S.tipo==="ricarica"){a=parseNum($("#v-kwh").value);b=parseNum($("#v-prezzo").value);}
+    else if(S.tipo==="rifornimento"){a=parseNum($("#v-qta").value);b=parseNum($("#v-pu").value);}
+    else return;
+    $("#v-importo").value=(isNum(a)&&isNum(b))?decIt(a*b,2):"";
+  }
+  function apriRegistra(){
+    $("#voce-form").reset();
+    S.importoTouched=false;
+    $("#v-data").value=iso(today());
+    var tipi=tipiDisponibili(),seg=$("#tipo-seg");
+    seg.className="seg"+(tipi.length===4?" four":"");
+    seg.innerHTML=tipi.map(function(t){return '<button type="button" data-tipo="'+t+'" aria-pressed="false">'+TIPI[t]+"</button>";}).join("");
+    var u=unitFuel();
+    $("#v-qta-l").textContent=u==="kg"?"Kg":"Litri";
+    $("#v-pu-l").textContent=u==="kg"?"€/kg":"€/litro";
+    setTipo(tipi[0]);
+    if(usaKwh())setLuogo("casa");
+    openSheet("sheet");
+  }
+  $("#fab").addEventListener("click",apriRegistra);
+  $("#tipo-seg").addEventListener("click",function(e){var b=e.target.closest("[data-tipo]");if(b)setTipo(b.dataset.tipo);});
+  $$("#luogo-seg button").forEach(function(b){b.addEventListener("click",function(){setLuogo(b.dataset.luogo);});});
+  ["#v-kwh","#v-prezzo","#v-qta","#v-pu"].forEach(function(s){$(s).addEventListener("input",ricalcola);});
+  $("#v-importo").addEventListener("input",function(){S.importoTouched=$("#v-importo").value.trim()!=="";});
+
+  $("#voce-form").addEventListener("submit",async function(ev){
+    ev.preventDefault();
+    var err=$("#v-err"),t=S.tipo,data=$("#v-data").value;
+    if(!parseD(data))return showErr(err,"Inserisci la data.");
+    var km=parseNum($("#v-km").value);
+    if(km!==null&&(isNaN(km)||km<0))return showErr(err,"I km non sono un numero valido.");
+    var imp=parseNum($("#v-importo").value);
+    if(imp!==null&&(isNaN(imp)||imp<0))return showErr(err,"L'importo non è un numero valido.");
+    var note=$("#v-note").value.trim();
+    var body={tipo:t,data:data,km:km===null?null:Math.round(km),importo:null,note:note||null,creato:new Date().toISOString()};
+    if(t==="ricarica"||t==="rifornimento"){
+      var q=parseNum($(t==="ricarica"?"#v-kwh":"#v-qta").value),pz=parseNum($(t==="ricarica"?"#v-prezzo":"#v-pu").value);
+      if(q!==null&&(isNaN(q)||q<=0))return showErr(err,t==="ricarica"?"I kWh non sono un numero valido.":"La quantità non è un numero valido.");
+      if(pz!==null&&(isNaN(pz)||pz<0))return showErr(err,"Il prezzo unitario non è valido.");
+      if(imp===null&&isNum(q)&&isNum(pz))imp=q*pz;
+      if(imp===null)return showErr(err,t==="ricarica"?"Inserisci l'importo, oppure kWh e prezzo per kWh.":"Inserisci l'importo, oppure quantità e prezzo.");
+      if(t==="ricarica"){body.kwh=q;body.prezzoKwh=pz;body.luogo=S.luogo;}
+      else{body.qta=q;body.prezzoUnit=pz;body.unita=unitFuel();}
+    } else if(t==="manutenzione"){
+      var dm=$("#v-desc-m").value.trim();
+      if(!dm)return showErr(err,"Scrivi che intervento è stato fatto.");
+      body.descrizione=dm;
+    } else {
+      if(imp===null)return showErr(err,"Inserisci l'importo della spesa.");
+      body.categoria=$("#v-cat").value;body.descrizione=$("#v-desc-s").value.trim()||null;
+    }
+    body.importo=imp===null?null:Math.round(imp*100)/100;
+    showErr(err,"");
+    var btn=$("#v-save");btn.disabled=true;
+    var ref=col("registro").doc(),cur=kmNow().km;
+    var lref=(isNum(body.km)&&(!isNum(cur)||body.km>cur))?col("letture").doc():null;
+    var ok=await write(async function(){
+      await ref.set(body);
+      if(lref){await lref.set({data:body.data,km:body.km});await vRef().update({kmAttuali:body.km,kmData:body.data});}
+    },{ricarica:"Ricarica registrata",rifornimento:"Rifornimento registrato",manutenzione:"Intervento registrato",spesa:"Spesa registrata"}[t]);
+    btn.disabled=false;
+    if(ok){S.mese=body.data.slice(0,7);closeSheet("sheet");render();}
+  });
+
+  /* ---------- scadenze ---------- */
+  function apriScad(s){
+    S.editScad=s?s.id:null;
+    $("#ss-form").reset();showErr($("#ss-err"),"");
+    $("#ss-t").textContent=s?"Modifica scadenza":"Nuova scadenza";
+    if(s){
+      $("#ss-titolo").value=s.titolo||"";$("#ss-data").value=s.data||"";$("#ss-km").value=isNum(s.km)?num(s.km):"";
+      $("#ss-ripeti").value=isNum(s.ripeti)&&[6,12,24].indexOf(s.ripeti)>=0?String(s.ripeti):"";
+      $("#ss-ripeti-km").value=isNum(s.ripetiKm)?num(s.ripetiKm):"";$("#ss-nota").value=s.nota||"";
+    }
+    openSheet("ss");
+  }
+  $("#scad-new").addEventListener("click",function(){apriScad(null);});
+  $("#ss-form").addEventListener("submit",async function(ev){
+    ev.preventDefault();
+    var err=$("#ss-err"),tit=$("#ss-titolo").value.trim(),data=$("#ss-data").value,km=parseNum($("#ss-km").value),rk=parseNum($("#ss-ripeti-km").value),rp=$("#ss-ripeti").value;
+    if(!tit)return showErr(err,"Scrivi a cosa si riferisce la scadenza.");
+    if(km!==null&&(isNaN(km)||km<=0))return showErr(err,"I km non sono un numero valido.");
+    if(rk!==null&&(isNaN(rk)||rk<=0))return showErr(err,"Il valore «ogni km» non è valido.");
+    showErr(err,"");
+    var body={titolo:tit,data:parseD(data)?data:null,km:km===null?null:Math.round(km),ripeti:rp?Number(rp):null,ripetiKm:rk===null?null:Math.round(rk),nota:$("#ss-nota").value.trim()||null};
+    var id=S.editScad,ok;
+    if(id){ok=await write(function(){return col("scadenze").doc(id).update(body);},"Scadenza aggiornata");}
+    else{body.stato="attiva";body.tipo="altro";body.fineMese=false;body.creata=iso(today());var ref=col("scadenze").doc();ok=await write(function(){return ref.set(body);},"Scadenza aggiunta");}
+    if(ok)closeSheet("ss");
+  });
+  async function segnaFatta(id){
+    var s=null;for(var i=0;i<S.scadenze.length;i++){if(S.scadenze[i].id===id)s=S.scadenze[i];}
+    if(!s)return;
+    var t=today(),now=kmNow().km,next=null;
+    var rm=isNum(s.ripeti)&&s.ripeti>0,rk=isNum(s.ripetiKm)&&s.ripetiKm>0&&isNum(now);
+    if(rm||rk){
+      var nd=null;
+      if(rm){var dalFatto=s.fineMese||s.tipo==="tagliando";var b=dalFatto?t:(parseD(s.data)||t);nd=addMonthsD(b,s.ripeti);if(s.fineMese)nd=endOfMonth(nd);}
+      next={titolo:s.titolo,tipo:s.tipo||"altro",data:nd?iso(nd):null,km:rk?Math.round(now+s.ripetiKm):null,
+        ripeti:rm?s.ripeti:null,ripetiKm:isNum(s.ripetiKm)?s.ripetiKm:null,fineMese:!!s.fineMese,nota:s.nota||null,stato:"attiva",creata:iso(t)};
+      if(next.nota&&/^Inserisci/.test(next.nota))next.nota=null;
+    }
+    var nref=next?col("scadenze").doc():null;
+    await write(async function(){
+      await col("scadenze").doc(id).update({stato:"fatta",fattaIl:iso(t)});
+      if(nref)await nref.set(next);
+    },next?"Fatta. Prossima: "+(next.data?fmtD(next.data):"a "+num(next.km)+" km"):"Segnata come fatta");
+  }
+
+  /* ---------- click delegati ---------- */
+  var armed=null,armedT=null;
+  function arm(btn,key,label){
+    if(armed===key){armed=null;clearTimeout(armedT);return true;}
+    armed=key;btn.textContent=label;clearTimeout(armedT);
+    armedT=setTimeout(function(){armed=null;render();},4000);
+    return false;
+  }
+  document.addEventListener("click",async function(e){
+    var b=e.target.closest("button");
+    if(b&&b.dataset.fatto){b.disabled=true;await segnaFatta(b.dataset.fatto);return;}
+    if(b&&b.dataset.modScad){var s=null;S.scadenze.forEach(function(x){if(x.id===b.dataset.modScad)s=x;});if(s)apriScad(s);return;}
+    if(b&&b.dataset.delScad){
+      if(!arm(b,"s:"+b.dataset.delScad,"Conferma eliminazione"))return;
+      var sid=b.dataset.delScad;
+      await write(function(){return col("scadenze").doc(sid).delete();},"Scadenza eliminata");
+      return;
+    }
+    if(b&&b.dataset.delVoce){
+      if(!arm(b,"v:"+b.dataset.delVoce,"Conferma eliminazione"))return;
+      var vid=b.dataset.delVoce;
+      await write(function(){return col("registro").doc(vid).delete();},"Voce eliminata");
+      return;
+    }
+    if(b&&b.id==="v-del"){
+      if(!arm(b,"veicolo:"+S.vid,"Conferma: elimina "+(S.v&&S.v.nome?S.v.nome:"il veicolo")))return;
+      await eliminaVeicolo();return;
+    }
+    var main=e.target.closest(".voce .main");
+    if(main&&!S.ro){
+      var id=main.parentElement.dataset.voce;
+      S.openVoce=S.openVoce===id?null:id;
+      $$(".voce").forEach(function(x){x.classList.toggle("open",x.dataset.voce===S.openVoce);});
+    }
+  });
+  async function eliminaVeicolo(){
+    var vid=S.vid,rest=S.veicoli.filter(function(v){return v.id!==vid;});
+    var ok=await write(async function(){
+      var names=["registro","scadenze","letture"];
+      for(var i=0;i<names.length;i++){var q=await col(names[i],vid).get();for(var j=0;j<q.docs.length;j++){await col(names[i],vid).doc(q.docs[j].id).delete();}}
+      await vRef(vid).delete();
+      await garageRef().set({attivo:rest.length?rest[0].id:null});
+    },"Veicolo eliminato");
+    if(ok){S.vid=null;S.pendingVid=rest.length?rest[0].id:null;setTab("riepilogo");scegliAttivo();render();}
+  }
+
+  /* ---------- prezzo energia ---------- */
+  $("#prezzo-casa").addEventListener("input",function(){this.dataset.dirty="1";});
+  $("#prezzo-form").addEventListener("submit",async function(ev){
+    ev.preventDefault();
+    var err=$("#prezzo-err"),v=parseNum($("#prezzo-casa").value);
+    if(v===null||isNaN(v)||v<=0||v>2)return showErr(err,"Scrivi il prezzo in euro per kWh, per esempio 0,25.");
+    showErr(err,"");
+    var val=Math.round(v*1000)/1000;
+    var ok=await write(function(){return vRef().update({prezzoKwhCasa:val});},"Prezzo salvato");
+    if(ok){delete $("#prezzo-casa").dataset.dirty;$("#prezzo-casa").blur();}
+  });
+
+  /* ---------- sottoscrizioni ---------- */
+  function onErr(){banner("Non riesco a leggere i dati salvati. Ricarica la pagina tra poco.");}
+  function subVeicolo(vid){
+    unsubV.forEach(function(u){try{u();}catch(e){}});unsubV=[];
+    S.vidSub=vid;S.vid=vid;S.registro=[];S.scadenze=[];S.letture=[];S.openVoce=null;
+    S.ready.r=S.ready.s=S.ready.l=!vid;
+    if(!vid){render();return;}
+    [["registro","r"],["scadenze","s"],["letture","l"]].forEach(function(p){
+      try{
+        unsubV.push(col(p[0],vid).onSnapshot(function(q){
+          if(S.vidSub!==vid)return;
+          S[p[0]]=q.docs.map(function(d){return Object.assign({id:d.id},d.data());});S.ready[p[1]]=true;render();
+        },onErr));
+      }catch(e){onErr();}
+    });
+    render();
+  }
+  function scegliAttivo(){
+    if(!S.ready.g||!S.ready.v)return;
+    var ids=S.veicoli.map(function(v){return v.id;}),want=null;
+    if(S.pendingVid&&ids.indexOf(S.pendingVid)>=0){want=S.pendingVid;S.pendingVid=null;}
+    else if(S.vid&&ids.indexOf(S.vid)>=0)want=S.vid;
+    else if(S.garage&&ids.indexOf(S.garage.attivo)>=0)want=S.garage.attivo;
+    else want=ids[0]||null;
+    if(want!==S.vidSub)subVeicolo(want);
+  }
+
+  /* ---------- archivio sul dispositivo ---------- */
+  function LocalDB(KEY){
+    var data={},listeners=[],queued=false;
+    function load(){try{var raw=localStorage.getItem(KEY);data=raw?(JSON.parse(raw)||{}):{};}catch(e){data=data||{};}}
+    load();
+    function clone(o){return o===undefined?undefined:JSON.parse(JSON.stringify(o));}
+    function persist(){try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){var er=new Error("quota");er.code="quota_exceeded";throw er;}}
+    function parentOf(p){return p.slice(0,p.lastIndexOf("/"));}
+    function snapDoc(p){var ex=Object.prototype.hasOwnProperty.call(data,p),d=ex?clone(data[p]):undefined;
+      return {id:p.slice(p.lastIndexOf("/")+1),exists:ex,data:function(){return d;},metadata:{fromCache:false,hasPendingWrites:false}};}
+    function snapCol(c){var docs=Object.keys(data).filter(function(p){return parentOf(p)===c;}).sort().map(snapDoc);
+      return {docs:docs,size:docs.length,empty:!docs.length,metadata:{fromCache:false,hasPendingWrites:false},docChanges:function(){return [];}};}
+    function notify(){if(queued)return;queued=true;Promise.resolve().then(function(){queued=false;
+      listeners.slice().forEach(function(l){if(l.on)l.cb(l.kind==="doc"?snapDoc(l.path):snapCol(l.path));});});}
+    function merge(t,o){Object.keys(o).forEach(function(k){var v=o[k];
+      if(v&&typeof v==="object"&&!Array.isArray(v)&&t[k]&&typeof t[k]==="object"&&!Array.isArray(t[k]))merge(t[k],v);else t[k]=clone(v);});}
+    function rid(){var a=new Uint8Array(12);(window.crypto||window.msCrypto).getRandomValues(a);return Array.prototype.map.call(a,function(b){return (b%36).toString(36);}).join("");}
+    function apply(fn){var prev=clone(data);try{fn();persist();}catch(e){data=prev;return Promise.reject(e);}notify();return Promise.resolve();}
+    function listen(kind,path,cb){var l={kind:kind,path:path,cb:cb,on:true};listeners.push(l);
+      Promise.resolve().then(function(){if(l.on)cb(kind==="doc"?snapDoc(path):snapCol(path));});
+      return function(){l.on=false;listeners=listeners.filter(function(x){return x!==l;});};}
+    function docRef(p){return {id:p.slice(p.lastIndexOf("/")+1),path:p,
+      get:function(){return Promise.resolve(snapDoc(p));},
+      set:function(o){return apply(function(){data[p]=clone(o);});},
+      update:function(o){if(!Object.prototype.hasOwnProperty.call(data,p))return Promise.reject({code:"invalid_argument",message:"documento mancante"});return apply(function(){merge(data[p],o);});},
+      "delete":function(){return apply(function(){delete data[p];});},
+      onSnapshot:function(cb){return listen("doc",p,cb);},
+      collection:function(n){return colRef(p+"/"+n);}};}
+    function colRef(c){return {path:c,
+      doc:function(id){return docRef(c+"/"+(id||rid()));},
+      get:function(){return Promise.resolve(snapCol(c));},
+      onSnapshot:function(cb){return listen("col",c,cb);}};}
+    window.addEventListener("storage",function(e){if(e.key===KEY){load();notify();}});
+    return {doc:docRef,collection:colRef,
+      tutto:function(){return clone(data);},
+      sostituisci:function(prefix,docs){return apply(function(){var nd={};
+        Object.keys(data).forEach(function(p){if(p.indexOf(prefix)!==0)nd[p]=data[p];});
+        Object.keys(docs).forEach(function(k){nd[prefix+k]=clone(docs[k]);});data=nd;});}};
+  }
+  function storageOk(){try{localStorage.setItem("__prova","1");localStorage.removeItem("__prova");return true;}catch(e){return false;}}
+  var persistenzaChiesta=false;
+  function chiediPersistenza(){if(persistenzaChiesta)return;persistenzaChiesta=true;try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}}
+
+  /* ---------- backup ---------- */
+  function prefisso(){return "data/users/"+S.uid+"/";}
+  function aggiornaInfoBackup(){
+    var u=null;try{u=localStorage.getItem("libretto-ultimo-backup");}catch(e){}
+    $("#bk-info").textContent=u?"Ultimo backup esportato il "+fmtD(u)+". I dati sono solo su questo telefono: salva il file su Drive o mandalo per email.":"I dati sono salvati solo su questo telefono. Esporta un backup ogni tanto e salvalo su Drive o mandalo per email.";
+  }
+  function esportaBackup(){
+    var all=S.db.tutto(),pre=prefisso(),docs={};
+    Object.keys(all).forEach(function(p){if(p.indexOf(pre)===0)docs[p.slice(pre.length)]=all[p];});
+    var file={app:"Libretto Auto",formato:1,esportato:new Date().toISOString(),documenti:docs};
+    var blob=new Blob([JSON.stringify(file,null,2)],{type:"application/json"});
+    var url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="libretto-auto-backup-"+iso(today())+".json";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},5000);
+    try{localStorage.setItem("libretto-ultimo-backup",iso(today()));}catch(e){}
+    aggiornaInfoBackup();toast("Backup salvato tra i download");
+  }
+  function leggiBackup(text){
+    var o;try{o=JSON.parse(text);}catch(e){return {err:"Il file non è un backup valido."};}
+    if(!o||o.app!=="Libretto Auto"||!o.documenti||typeof o.documenti!=="object")return {err:"Questo file non è un backup del Libretto Auto."};
+    var docs={},n=0,k;
+    for(k in o.documenti){
+      if(!Object.prototype.hasOwnProperty.call(o.documenti,k))continue;
+      var v=o.documenti[k];
+      if(!/^garage(\/[A-Za-z0-9_\-.~:@+]+)*$/.test(k)||!v||typeof v!=="object"||Array.isArray(v))return {err:"Il backup contiene dati non validi."};
+      docs[k]=v;if(/^garage\/veicoli\/[^\/]+$/.test(k))n++;
+    }
+    if(!n)return {err:"Il backup non contiene veicoli."};
+    return {docs:docs,veicoli:n,data:typeof o.esportato==="string"?o.esportato.slice(0,10):null};
+  }
+  var bkMode=null,bkDocs=null;
+  async function ripristina(docs){
+    var prevOnb=S.onb;
+    unsubV.forEach(function(u){try{u();}catch(e){}});unsubV=[];
+    S.vid=null;S.vidSub=null;S.pendingVid=null;S.onb=null;S.mese=mk(today());S.restoring=true;
+    try{await S.db.sostituisci(prefisso(),docs);}
+    catch(e){S.restoring=false;S.onb=prevOnb;scegliAttivo();render();toast("Non sono riuscito a ripristinare il backup: memoria del browser piena.");return;}
+    S.restoring=false;closeSheet("vs");setTab("riepilogo");scegliAttivo();render();toast("Backup ripristinato");
+  }
+  $("#bk-exp").addEventListener("click",esportaBackup);
+  $("#bk-imp").addEventListener("click",function(){bkMode="sheet";$("#bk-file").value="";$("#bk-file").click();});
+  $("#onb-import").addEventListener("click",function(){bkMode="onb";$("#bk-file").value="";$("#bk-file").click();});
+  $("#bk-file").addEventListener("change",function(){
+    var f=this.files&&this.files[0];if(!f)return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      var r=leggiBackup(String(rd.result||""));
+      if(r.err){if(bkMode==="onb")toast(r.err);else showErr($("#bk-err"),r.err);return;}
+      if(bkMode==="onb"){ripristina(r.docs);return;}
+      showErr($("#bk-err"),"");bkDocs=r.docs;
+      $("#bk-msg").textContent="Il backup"+(r.data?" del "+fmtD(r.data):"")+" contiene "+r.veicoli+(r.veicoli===1?" veicolo":" veicoli")+". Sostituirà tutti i dati attuali su questo telefono.";
+      $("#bk-confirm").hidden=false;
+    };
+    rd.onerror=function(){toast("Non riesco a leggere il file.");};
+    rd.readAsText(f);
+  });
+  $("#bk-ok").addEventListener("click",function(){$("#bk-confirm").hidden=true;if(bkDocs)ripristina(bkDocs);bkDocs=null;});
+  $("#bk-no").addEventListener("click",function(){$("#bk-confirm").hidden=true;bkDocs=null;});
+  $("#who").addEventListener("click",function(){$("#bk-confirm").hidden=true;showErr($("#bk-err"),"");aggiornaInfoBackup();});
+  $("#plate-box").addEventListener("click",function(){$("#bk-confirm").hidden=true;showErr($("#bk-err"),"");aggiornaInfoBackup();});
+
+  /* ---------- installazione ---------- */
+  var installEvt=null;
+  window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();installEvt=e;$("#install-bar").hidden=false;});
+  window.addEventListener("appinstalled",function(){installEvt=null;$("#install-bar").hidden=true;toast("App installata");});
+  $("#install").addEventListener("click",async function(){
+    if(!installEvt)return;installEvt.prompt();
+    try{await installEvt.userChoice;}catch(e){}
+    installEvt=null;$("#install-bar").hidden=true;
+  });
+  if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}
+
+  /* ---------- avvio ---------- */
+  S.mese=mk(today());
+  (function(){var start="riepilogo";try{var h=(location.hash||"").slice(1);if(TITOLI[h])start=h;else{var sv=localStorage.getItem("libretto-tab");if(TITOLI[sv])start=sv;}}catch(e){}setTab(start);})();
+  if(!storageOk())banner("Questo browser non permette di salvare dati, forse perché sei in navigazione in incognito. Apri l'app in una finestra normale, altrimenti i dati si perdono alla chiusura.");
+  S.db=LocalDB("libretto-auto-dati");S.uid="local";
+  aggiornaInfoBackup();
+  garageRef().onSnapshot(function(s){S.garage=s.exists?s.data():null;S.ready.g=true;scegliAttivo();render();},onErr);
+  veicoliCol().onSnapshot(function(q){
+    S.veicoli=q.docs.map(function(d){return Object.assign({id:d.id},d.data());}).sort(function(a,b){return (a.creato||"").localeCompare(b.creato||"");});
+    S.ready.v=true;scegliAttivo();render();
+  },onErr);
+  render();
+})();
+</script>
+</body>
+</html>
