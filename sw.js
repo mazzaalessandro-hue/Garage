@@ -1,6 +1,6 @@
-// Libretto Auto: rende l'app disponibile anche senza connessione.
+// Garage: rende l'app disponibile anche senza connessione.
 // Quando pubblichi una nuova versione, cambia VERSIONE.
-const VERSIONE = "libretto-auto-v1";
+const VERSIONE = "garage-v1";
 const BASE = [
   "./",
   "./index.html",

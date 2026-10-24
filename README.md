@@ -1,4 +1,4 @@
-# Libretto Auto
+# Garage
 
 Web app per tenere sotto controllo un'auto (o più di una): spese mensili di ricariche, carburante e manutenzione, scadenze con promemoria ricorrenti, chilometri e scheda del veicolo.
 

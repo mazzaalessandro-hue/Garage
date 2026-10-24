@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Libretto Auto</title>
+<title>Garage</title>
 <meta name="description" content="Spese, scadenze e chilometri della tua auto, salvati sul tuo telefono.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="favicon.png">
@@ -12,7 +12,7 @@
 <meta name="theme-color" content="#0E1419" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Libretto Auto">
+<meta name="apple-mobile-web-app-title" content="Garage">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
@@ -266,14 +266,14 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       <g fill="#F2C200"><rect x="52" y="214" width="70" height="14" rx="7"/><rect x="36" y="250" width="70" height="14" rx="7"/><rect x="60" y="286" width="70" height="14" rx="7"/></g>
     </svg>
     <div class="hl">
-      <button class="who" id="who" type="button" disabled><span class="eyebrow"><span id="v-name">Libretto Auto</span><span class="chev" aria-hidden="true">▼</span></span></button>
-      <h1 id="app-title">Libretto Auto</h1>
+      <button class="who" id="who" type="button" disabled><span class="eyebrow"><span id="v-name">Garage</span><span class="chev" aria-hidden="true">▼</span></span></button>
+      <h1 id="app-title">Garage</h1>
     </div>
     <div class="plate" id="plate-box" hidden role="button" tabindex="0" aria-label="Cambia veicolo"><span class="band">I</span><span class="num" id="plate"></span><span class="band" aria-hidden="true"></span></div>
   </header>
 
   <p class="banner" id="banner" hidden></p>
-  <div class="installbar" id="install-bar" hidden><span>Installa Libretto Auto sul telefono</span><button class="btn primary sm" type="button" id="install">Installa</button></div>
+  <div class="installbar" id="install-bar" hidden><span>Installa Garage sul telefono</span><button class="btn primary sm" type="button" id="install">Installa</button></div>
   <p class="empty" id="loading">Caricamento del tuo garage…</p>
 
   <!-- APP -->
@@ -394,7 +394,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   <!-- REGISTRAZIONE VEICOLO -->
   <section id="onb" hidden>
     <div id="onb-steps"><div class="steps"><i></i><i></i><i></i></div><p class="steplbl" id="steplbl"></p></div>
-    <svg class="logo-big" id="onb-logo" viewBox="0 0 512 512" role="img" aria-label="Libretto Auto">
+    <svg class="logo-big" id="onb-logo" viewBox="0 0 512 512" role="img" aria-label="Garage">
       <defs><linearGradient id="lg-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E5478"/><stop offset="1" stop-color="#0C1A28"/></linearGradient></defs>
       <rect width="512" height="512" rx="112" fill="url(#lg-b)"/>
       <g transform="translate(22 -6)">
@@ -1125,9 +1125,9 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       renderRiepilogo();renderSpese();renderCalendario();renderScadenze();renderAuto();
       $("#km-open").hidden=S.ro||!$("#km-form").hidden;
     } else {
-      $("#v-name").textContent="Libretto Auto";
+      $("#v-name").textContent="Garage";
       who.disabled=true;pb.hidden=true;
-      $("#app-title").textContent=w==="onb"?(S.onb.mode==="edit"?"Modifica veicolo":"Nuovo veicolo"):"Libretto Auto";
+      $("#app-title").textContent=w==="onb"?(S.onb.mode==="edit"?"Modifica veicolo":"Nuovo veicolo"):"Garage";
       if(w==="onb")renderOnb();
     }
   }
@@ -1480,10 +1480,10 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   function esportaBackup(){
     var all=S.db.tutto(),pre=prefisso(),docs={};
     Object.keys(all).forEach(function(p){if(p.indexOf(pre)===0)docs[p.slice(pre.length)]=all[p];});
-    var file={app:"Libretto Auto",formato:1,esportato:new Date().toISOString(),documenti:docs};
+    var file={app:"Garage",formato:1,esportato:new Date().toISOString(),documenti:docs};
     var blob=new Blob([JSON.stringify(file,null,2)],{type:"application/json"});
     var url=URL.createObjectURL(blob),a=document.createElement("a");
-    a.href=url;a.download="libretto-auto-backup-"+iso(today())+".json";
+    a.href=url;a.download="garage-backup-"+iso(today())+".json";
     document.body.appendChild(a);a.click();a.remove();
     setTimeout(function(){URL.revokeObjectURL(url);},5000);
     try{localStorage.setItem("libretto-ultimo-backup",iso(today()));}catch(e){}
@@ -1491,7 +1491,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   }
   function leggiBackup(text){
     var o;try{o=JSON.parse(text);}catch(e){return {err:"Il file non è un backup valido."};}
-    if(!o||o.app!=="Libretto Auto"||!o.documenti||typeof o.documenti!=="object")return {err:"Questo file non è un backup del Libretto Auto."};
+    if(!o||(o.app!=="Garage"&&o.app!=="Libretto Auto")||!o.documenti||typeof o.documenti!=="object")return {err:"Questo file non è un backup di Garage."};
     var docs={},n=0,k;
     for(k in o.documenti){
       if(!Object.prototype.hasOwnProperty.call(o.documenti,k))continue;
