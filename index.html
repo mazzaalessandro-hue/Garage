@@ -40,6 +40,11 @@ img{max-width:100%}
 .tips li{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:15px;line-height:1.45}
 .tips li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--accent);margin:8px 0 0 6px}
 .pm-count{display:flex;flex-wrap:wrap;gap:8px}
+/* promemoria */
+.notif{display:flex;flex-direction:column;gap:10px}
+.notif .meta{margin:0}
+.notif .inline-form{gap:8px}
+a.btn{display:inline-flex;align-items:center;text-decoration:none}
 /* pulsante con la spunta */
 .item.has-check{grid-template-columns:auto minmax(0,1fr) auto}
 .item.has-check .s,.item.has-check .acts{grid-column:2/-1}
@@ -351,6 +356,16 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     </section>
 
     <section class="stack" id="p-scadenze" role="tabpanel" aria-labelledby="t-scadenze" hidden>
+      <div class="card notif" id="notif-card">
+        <div class="sec-head"><span class="lbl">Promemoria</span><span class="chip muted" id="notif-chip">spenti</span></div>
+        <p class="meta" id="notif-txt"></p>
+        <div class="inline-form">
+          <button class="btn primary sm" type="button" id="notif-on">Attiva le notifiche</button>
+          <button class="btn sm" type="button" id="notif-test" hidden>Prova</button>
+          <button class="btn ghost sm" type="button" id="notif-off" hidden>Disattiva</button>
+        </div>
+        <button class="link self-start" type="button" id="ics-exp" style="text-align:left">Scarica tutte le scadenze per il calendario (.ics)</button>
+      </div>
       <div>
         <div class="sec-head"><h2>In programma</h2><button class="link" type="button" id="scad-new">Aggiungi</button></div>
         <ul class="list" id="scad-list"></ul>
@@ -843,7 +858,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       '<div class="main"><div class="t">'+esc(s.titolo||"Scadenza")+'</div>'+(meta.length?'<div class="meta">'+esc(meta.join(" · "))+'</div>':"")+'</div>'+
       '<span class="chip '+st.cls+'">'+esc(st.lbl)+'</span>';
     if(s.nota)h+='<div class="s">'+esc(s.nota)+'</div>';
-    if(acts&&acts!=="pan"&&!S.ro)h+='<div class="acts"><button type="button" class="btn sm" data-mod-scad="'+esc(s.id)+'">Modifica</button><button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button></div>';
+    if(acts&&acts!=="pan"&&!S.ro)h+='<div class="acts">'+(parseD(s.data)?'<a class="btn sm" href="'+esc(gcalUrl(((S.v&&S.v.nome)?S.v.nome+": ":"")+(s.titolo||"Scadenza"),s.data,s.nota))+'" target="_blank" rel="noopener">Calendario</a>':"")+'<button type="button" class="btn sm" data-mod-scad="'+esc(s.id)+'">Modifica</button><button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button></div>';
     return h+"</li>";
   }
   function voceTitolo(e){
@@ -941,6 +956,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
       return '<li class="item done"><div class="main"><div class="t">'+esc(s.titolo)+'</div><div class="meta">'+esc(dm.join(" · "))+"</div></div>"+
         (S.ro?"":'<button type="button" class="btn sm danger" data-del-scad="'+esc(s.id)+'">Elimina</button>')+"</li>";}).join("");
     $("#scad-new").hidden=S.ro;
+    renderNotifiche();
   }
 
   function renderAuto(){
@@ -1015,8 +1031,9 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     tutte:["Togli il peso inutile dal bagagliaio e le barre portatutto quando non servono: consumi meno.",
         "Se senti rumori nuovi, vibrazioni o la frenata cambia, fai controllare l'auto senza aspettare il tagliando."]
   };
-  function pianoAuto(){
-    var a=alim(),ev=a==="elettrica",ice=a!=="elettrica";
+  function pianoAuto(){return pianoPer(alim());}
+  function pianoPer(a){
+    a=a||"benzina";var ev=a==="elettrica",ice=a!=="elettrica";
     return PIANO.filter(function(d){
       return d.per==="tutte"||(d.per==="ev"&&ev)||(d.per==="ice"&&ice)||(d.per==="rigen"&&(ev||a==="ibrida"||a==="plugin"))||
         (d.per==="scintilla"&&["benzina","gpl","metano","ibrida","plugin"].indexOf(a)>=0)||(d.per==="diesel"&&a==="diesel")||(d.per==="gpl"&&a==="gpl");
@@ -1357,6 +1374,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
     return "app";
   }
   function render(){
+    schedPromemoria();
     S.v=null;for(var i=0;i<S.veicoli.length;i++){if(S.veicoli[i].id===S.vid){S.v=S.veicoli[i];break;}}
     var w=vista();
     if(w==="onb-new"){S.onb={mode:"new",step:1};enterOnb("new");return;}
@@ -1851,6 +1869,149 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   $("#bk-ok").addEventListener("click",function(){$("#bk-confirm").hidden=true;if(bkDocs)ripristina(bkDocs);bkDocs=null;});
   $("#bk-no").addEventListener("click",function(){$("#bk-confirm").hidden=true;bkDocs=null;});
   $("#who").addEventListener("click",function(){$("#bk-confirm").hidden=true;showErr($("#bk-err"),"");aggiornaInfoBackup();});
+
+  /* ---------- promemoria e notifiche ---------- */
+  var NOTIF_KEY="garage-notifiche",PROM_CACHE="garage-promemoria";
+  S.syncStato=null;
+  function notifSupportate(){return ("Notification" in window)&&("serviceWorker" in navigator)&&("caches" in window);}
+  function notifPref(){try{return localStorage.getItem(NOTIF_KEY)==="1";}catch(e){return false;}}
+  function setNotifPref(v){try{localStorage.setItem(NOTIF_KEY,v?"1":"0");}catch(e){}}
+  function notifAttive(){return notifSupportate()&&Notification.permission==="granted"&&notifPref();}
+  function installata(){try{return window.matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;}catch(e){return false;}}
+  function gcalUrl(titolo,dataIso,dettagli){
+    var d=parseD(dataIso),e=new Date(d);e.setDate(e.getDate()+1);
+    function f(x){return x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate());}
+    return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent(titolo)+"&dates="+f(d)+"/"+f(e)+
+      "&details="+encodeURIComponent((dettagli?dettagli+"\n\n":"")+"Promemoria da Garage");
+  }
+  // Scadenze e controlli di tutti i veicoli, con la data in cui avvisare
+  function calcolaPromemoria(){
+    var all=S.db.tutto(),pre=prefisso()+"garage/veicoli/",veic={},out=[];
+    Object.keys(all).forEach(function(p){
+      if(p.indexOf(pre)!==0)return;
+      var r=p.slice(pre.length).split("/"),vid=r[0];
+      var V=veic[vid]=veic[vid]||{v:null,scadenze:[],letture:[],piano:[]};
+      if(r.length===1)V.v=all[p];
+      else if(r.length===3&&V[r[1]])V[r[1]].push(Object.assign({id:r[2]},all[p]));
+    });
+    var ids=Object.keys(veic).filter(function(k){return veic[k].v;}),multi=ids.length>1;
+    ids.forEach(function(vid){
+      var V=veic[vid],L=V.letture.filter(function(l){return parseD(l.data)&&isNum(l.km);})
+        .map(function(l){return {t:parseD(l.data).getTime(),km:l.km};}).sort(function(a,b){return a.t-b.t;});
+      var now=isNum(V.v.kmAttuali)?V.v.kmAttuali:null;
+      if(L.length&&(now===null||L[L.length-1].km>=now))now=L[L.length-1].km;
+      var rate=null;
+      if(L.length>=2){var a=L[0],b=L[L.length-1],gg=(b.t-a.t)/86400000;if(gg>=20&&b.km>a.km)rate=(b.km-a.km)/gg;}
+      function dataDaKm(km){
+        if(!isNum(km)||!isNum(now))return null;
+        if(km<=now)return iso(today());
+        if(!rate)return null;
+        var d=today();d.setDate(d.getDate()+Math.round((km-now)/rate));return iso(d);
+      }
+      var nome=multi?" ("+(V.v.nome||"veicolo")+")":"";
+      V.scadenze.forEach(function(sc){
+        if(sc.stato==="fatta")return;
+        var c=[];if(parseD(sc.data))c.push(sc.data);var dk=dataDaKm(sc.km);if(dk)c.push(dk);
+        if(!c.length)return;c.sort();
+        out.push({id:"s:"+vid+":"+sc.id,tipo:"scadenza",titolo:(sc.titolo||"Scadenza")+nome,data:c[0],stima:c[0]!==sc.data,nota:sc.nota||null,veicolo:V.v.nome||null});
+      });
+      pianoPer(V.v.alimentazione).forEach(function(d){
+        var st={};V.piano.forEach(function(x){if(x.id===d.id)st=x;});
+        if(!parseD(st.ultimaData))return;
+        var iv=intervallo(d,st),c=[];
+        if(iv.mesi)c.push(iso(addMonthsD(parseD(st.ultimaData),iv.mesi)));
+        if(iv.km&&isNum(st.ultimiKm)){var dk=dataDaKm(st.ultimiKm+iv.km);if(dk)c.push(dk);}
+        if(!c.length)return;c.sort();
+        out.push({id:"m:"+vid+":"+d.id,tipo:"manutenzione",titolo:d.t+nome,data:c[0],veicolo:V.v.nome||null});
+      });
+    });
+    return out;
+  }
+  var promT=null,promUltimo=null,promControllato=0;
+  function schedPromemoria(){clearTimeout(promT);promT=setTimeout(salvaPromemoria,500);}
+  function salvaPromemoria(){
+    if(!S.db||!S.uid||!("caches" in window))return Promise.resolve();
+    var voci;try{voci=calcolaPromemoria();}catch(e){return Promise.resolve();}
+    var json=JSON.stringify({attive:notifAttive(),aggiornato:iso(today()),voci:voci});
+    var cambiato=json!==promUltimo;promUltimo=json;
+    var scritto=cambiato?caches.open(PROM_CACHE).then(function(c){return c.put("promemoria.json",new Response(json,{headers:{"Content-Type":"application/json"}}));}).catch(function(){}):Promise.resolve();
+    return scritto.then(function(){
+      if(notifAttive()&&Date.now()-promControllato>6*3600000){promControllato=Date.now();chiediControllo();}
+    });
+  }
+  function chiediControllo(){
+    if(!("serviceWorker" in navigator))return;
+    navigator.serviceWorker.ready.then(function(reg){if(reg.active)reg.active.postMessage({tipo:"controlla"});}).catch(function(){});
+  }
+  async function registraSync(){
+    try{
+      var reg=await navigator.serviceWorker.ready;
+      if(!("periodicSync" in reg))return "no";
+      var st=await navigator.permissions.query({name:"periodic-background-sync"});
+      if(st.state!=="granted")return "negato";
+      await reg.periodicSync.register("garage-promemoria",{minInterval:12*3600000});
+      return "ok";
+    }catch(e){return "no";}
+  }
+  async function togliSync(){try{var reg=await navigator.serviceWorker.ready;if(reg.periodicSync)await reg.periodicSync.unregister("garage-promemoria");}catch(e){}}
+  function renderNotifiche(){
+    var chip=$("#notif-chip"),txt=$("#notif-txt"),on=$("#notif-on"),test=$("#notif-test"),off=$("#notif-off");
+    var sup=notifSupportate(),perm=sup?Notification.permission:"no",att=notifAttive();
+    on.hidden=!sup||perm==="denied"||att;test.hidden=!att;off.hidden=!att;
+    function set(cls,lbl,t){chip.className="chip "+cls;chip.textContent=lbl;txt.textContent=t;}
+    if(!sup)set("muted","non disponibili","Questo browser non può mostrare notifiche. Per i promemoria usa il pulsante Calendario su ogni scadenza.");
+    else if(perm==="denied")set("crit","bloccate","Hai bloccato le notifiche di Garage. Per riattivarle: impostazioni del telefono → App → Chrome (o Garage) → Notifiche.");
+    else if(!att)set("muted","spente","Ti avviso 30 giorni prima, 7 giorni prima e il giorno di ogni scadenza, e quando un controllo di manutenzione è da fare.");
+    else if(S.syncStato==="ok")set("ok","attive","Garage controlla le scadenze anche ad app chiusa, di solito una volta al giorno: il momento esatto lo decide Android, e più usi l'app più è puntuale.");
+    else if(S.syncStato===null)set("ok","attive","Controllo…");
+    else if(!installata())set("warn","solo all'apertura","Per ricevere gli avvisi anche con l'app chiusa installa Garage (menu ⋮ → Installa app). Per ora ti avviso quando la apri.");
+    else set("warn","solo all'apertura","Questo telefono non lascia controllare le scadenze in background: ti avviso quando apri Garage. Per non perdere nulla, aggiungi le scadenze al calendario.");
+  }
+  $("#notif-on").addEventListener("click",async function(){
+    var p;
+    try{p=await Notification.requestPermission();}catch(e){p=Notification.permission;}
+    if(p!=="granted"){renderNotifiche();toast(p==="denied"?"Notifiche bloccate":"Notifiche non attivate");return;}
+    setNotifPref(true);S.syncStato=null;renderNotifiche();
+    S.syncStato=await registraSync();
+    promUltimo=null;promControllato=0;await salvaPromemoria();
+    renderNotifiche();toast("Notifiche attive");
+  });
+  $("#notif-off").addEventListener("click",async function(){
+    setNotifPref(false);await togliSync();promUltimo=null;await salvaPromemoria();renderNotifiche();toast("Notifiche disattivate");
+  });
+  $("#notif-test").addEventListener("click",function(){
+    navigator.serviceWorker.ready.then(function(reg){
+      return reg.showNotification("Garage",{body:"Le notifiche funzionano: ti avviserò prima delle scadenze.",icon:"icon-192.png",tag:"garage-prova",data:{tab:"scadenze"}});
+    }).catch(function(){toast("Non riesco a mostrare la notifica di prova.");});
+  });
+  function icsTesto(t){return String(t||"").replace(/\\/g,"\\\\").replace(/;/g,"\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");}
+  function icsPiega(l){var o=[];while(l.length>70){o.push(l.slice(0,70));l=" "+l.slice(70);}o.push(l);return o.join("\r\n");}
+  $("#ics-exp").addEventListener("click",function(){
+    var voci=calcolaPromemoria().filter(function(v){return v.tipo==="scadenza";});
+    if(!voci.length){toast("Nessuna scadenza con una data da esportare.");return;}
+    var now=new Date(),stamp=now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+"T"+pad(now.getUTCHours())+pad(now.getUTCMinutes())+"00Z";
+    var L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Garage//Scadenze//IT","CALSCALE:GREGORIAN"];
+    voci.forEach(function(v){
+      var d=parseD(v.data),e=new Date(d);e.setDate(e.getDate()+1);
+      function f(x){return x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate());}
+      var tit=(v.veicolo&&v.titolo.indexOf("(")<0?v.veicolo+": ":"")+v.titolo;
+      L.push("BEGIN:VEVENT","UID:"+v.id.replace(/[^A-Za-z0-9:_-]/g,"")+"@garage","DTSTAMP:"+stamp,"DTSTART;VALUE=DATE:"+f(d),"DTEND;VALUE=DATE:"+f(e),
+        icsPiega("SUMMARY:"+icsTesto(tit)),icsPiega("DESCRIPTION:"+icsTesto((v.stima?"Data stimata dai km. ":"")+(v.nota||"")+" Promemoria da Garage.")),
+        "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsTesto(tit),"TRIGGER:-P6DT15H","END:VALARM",
+        "BEGIN:VALARM","ACTION:DISPLAY","DESCRIPTION:"+icsTesto(tit),"TRIGGER:-PT15H","END:VALARM","END:VEVENT");
+    });
+    L.push("END:VCALENDAR");
+    var blob=new Blob([L.join("\r\n")+"\r\n"],{type:"text/calendar"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="garage-scadenze.ics";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(url);},5000);
+    toast(voci.length+(voci.length===1?" scadenza esportata":" scadenze esportate"));
+  });
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.addEventListener("message",function(e){if(e.data&&e.data.tipo==="apri"&&TITOLI[e.data.tab])setTab(e.data.tab);});
+    document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")schedPromemoria();});
+  }
+  if(notifAttive()){registraSync().then(function(r){S.syncStato=r;renderNotifiche();});}
+  else S.syncStato="no";
 
   /* ---------- installazione ---------- */
   var installEvt=null;
