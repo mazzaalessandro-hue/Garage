@@ -1,15 +1,15 @@
 // Garage: rende l'app disponibile anche senza connessione.
 // Quando pubblichi una nuova versione, cambia VERSIONE.
-const VERSIONE = "garage-v5";
+const VERSIONE = "garage-v6";
 const BASE = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
-  "./favicon.png",
-  "./icon-192.png",
-  "./icon-512.png",
-  "./maskable-512.png",
-  "./apple-touch-icon.png"
+  "./app-icon-64.png",
+  "./app-icon-192.png",
+  "./app-icon-512.png",
+  "./app-icon-maskable-512.png",
+  "./app-icon-apple.png"
 ];
 
 self.addEventListener("install", (e) => {
@@ -117,7 +117,7 @@ async function controllaPromemoria() {
   const titolo = nuovi.length === 1 ? nuovi[0].v.titolo : "Garage: " + nuovi.length + " promemoria";
   const corpo = nuovi.length === 1 ? quando(nuovi[0].v, nuovi[0].d) : righe.join("\n");
   const tab = nuovi.every((n) => n.v.tipo === "manutenzione") ? "manutenzione" : "scadenze";
-  await self.registration.showNotification(titolo, { body: corpo, icon: "icon-192.png", tag: "garage-promemoria", renotify: true, data: { tab } });
+  await self.registration.showNotification(titolo, { body: corpo, icon: "app-icon-192.png", tag: "garage-promemoria", renotify: true, data: { tab } });
   const limite = giorniTra("2000-01-01", oggi) - 400;
   for (const k of Object.keys(fatti)) { if (giorniTra("2000-01-01", fatti[k]) < limite) delete fatti[k]; }
   for (const n of nuovi) fatti[n.chiave] = oggi;

@@ -6,8 +6,8 @@
 <title>Garage</title>
 <meta name="description" content="Spese, scadenze e chilometri della tua auto, salvati sul tuo telefono.">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" href="favicon.png">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="app-icon-64.png">
+<link rel="apple-touch-icon" href="app-icon-apple.png">
 <meta name="theme-color" content="#F1F3F5" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E1419" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -286,19 +286,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
 
 <div class="wrap">
   <header class="top">
-    <svg class="logo" viewBox="0 0 512 512" aria-hidden="true">
-      <defs><linearGradient id="lg-a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E5478"/><stop offset="1" stop-color="#0C1A28"/></linearGradient></defs>
-      <rect width="512" height="512" rx="112" fill="url(#lg-a)"/>
-      <g transform="translate(22 -6)">
-        <path fill="#FFFFFF" d="M112 300L112 238Q112 222 126 214L168 186Q180 178 196 178L290 178Q306 178 318 188L358 226L392 236Q406 240 406 256L406 300Q406 316 390 316L128 316Q112 316 112 300Z"/>
-        <path fill="#245474" d="M150 230L180 200Q186 194 194 194L244 194L244 230ZM258 194L290 194Q298 194 304 200L334 230L258 230Z"/>
-        <rect x="394" y="250" width="12" height="14" rx="3" fill="#F2C200"/>
-      </g>
-      <g fill="#13314A"><circle cx="202" cy="310" r="46"/><circle cx="356" cy="310" r="46"/></g>
-      <g fill="#FFFFFF"><circle cx="202" cy="310" r="36"/><circle cx="356" cy="310" r="36"/></g>
-      <g fill="#13314A"><circle cx="202" cy="310" r="14"/><circle cx="356" cy="310" r="14"/></g>
-      <g fill="#F2C200"><rect x="52" y="214" width="70" height="14" rx="7"/><rect x="36" y="250" width="70" height="14" rx="7"/><rect x="60" y="286" width="70" height="14" rx="7"/></g>
-    </svg>
+    <img class="logo" src="app-icon-192.png" alt="" width="44" height="44">
     <div class="hl">
       <button class="who" id="who" type="button" disabled><span class="eyebrow"><span id="v-name">Garage</span><span class="chev" aria-hidden="true">▼</span></span></button>
       <h1 id="app-title">Garage</h1>
@@ -454,19 +442,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   <!-- REGISTRAZIONE VEICOLO -->
   <section id="onb" hidden>
     <div id="onb-steps"><div class="steps"><i></i><i></i><i></i></div><p class="steplbl" id="steplbl"></p></div>
-    <svg class="logo-big" id="onb-logo" viewBox="0 0 512 512" role="img" aria-label="Garage">
-      <defs><linearGradient id="lg-b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1E5478"/><stop offset="1" stop-color="#0C1A28"/></linearGradient></defs>
-      <rect width="512" height="512" rx="112" fill="url(#lg-b)"/>
-      <g transform="translate(22 -6)">
-        <path fill="#FFFFFF" d="M112 300L112 238Q112 222 126 214L168 186Q180 178 196 178L290 178Q306 178 318 188L358 226L392 236Q406 240 406 256L406 300Q406 316 390 316L128 316Q112 316 112 300Z"/>
-        <path fill="#245474" d="M150 230L180 200Q186 194 194 194L244 194L244 230ZM258 194L290 194Q298 194 304 200L334 230L258 230Z"/>
-        <rect x="394" y="250" width="12" height="14" rx="3" fill="#F2C200"/>
-      </g>
-      <g fill="#13314A"><circle cx="202" cy="310" r="46"/><circle cx="356" cy="310" r="46"/></g>
-      <g fill="#FFFFFF"><circle cx="202" cy="310" r="36"/><circle cx="356" cy="310" r="36"/></g>
-      <g fill="#13314A"><circle cx="202" cy="310" r="14"/><circle cx="356" cy="310" r="14"/></g>
-      <g fill="#F2C200"><rect x="52" y="214" width="70" height="14" rx="7"/><rect x="36" y="250" width="70" height="14" rx="7"/><rect x="60" y="286" width="70" height="14" rx="7"/></g>
-    </svg>
+    <img class="logo-big" id="onb-logo" src="app-icon-512.png" alt="Garage" width="96" height="96">
     <p class="intro" id="onb-intro"></p>
     <p class="intro" id="onb-import-wrap" style="margin-top:-8px"><button class="link" type="button" id="onb-import">Hai già un backup? Ripristinalo</button></p>
     <form id="vf" class="stack" novalidate>
@@ -1981,7 +1957,7 @@ dl.spec dd{margin:0;font-weight:600;text-align:right;font-variant-numeric:tabula
   });
   $("#notif-test").addEventListener("click",function(){
     navigator.serviceWorker.ready.then(function(reg){
-      return reg.showNotification("Garage",{body:"Le notifiche funzionano: ti avviserò prima delle scadenze.",icon:"icon-192.png",tag:"garage-prova",data:{tab:"scadenze"}});
+      return reg.showNotification("Garage",{body:"Le notifiche funzionano: ti avviserò prima delle scadenze.",icon:"app-icon-192.png",tag:"garage-prova",data:{tab:"scadenze"}});
     }).catch(function(){toast("Non riesco a mostrare la notifica di prova.");});
   });
   function icsTesto(t){return String(t||"").replace(/\\/g,"\\\\").replace(/;/g,"\;").replace(/,/g,"\\,").replace(/\r?\n/g,"\\n");}
