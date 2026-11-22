@@ -1,6 +1,6 @@
 // Garage: rende l'app disponibile anche senza connessione.
 // Quando pubblichi una nuova versione, cambia VERSIONE.
-const VERSIONE = "garage-v6";
+const VERSIONE = "garage-v7";
 const BASE = [
   "./",
   "./index.html",
